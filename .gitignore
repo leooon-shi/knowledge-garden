@@ -1,0 +1,6 @@
+# CMake / asciidoctor HTML build output
+/build/
+
+# Common editor / OS cruft
+.DS_Store
+*.swp

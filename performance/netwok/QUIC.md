@@ -1,0 +1,2 @@
+git knowledge garden performance network > QUIC.md
+Google 的 QUIC（IQuick uDP Internet Connections］（https://1ink.juejin.cn/2target-https%34%2F%2Fzh.wikipedia-org2Fwiki%2F%25E5%25BF%25AB%25E9%2580%259FUDP%25E7%25BD%2591%25E7%25BB%259C%25E8%25BF%259E%25E6%258E%25A5））协议，继承了SPDY的特点。QUIC 是一个 UDP 版的 TCP + TLS + HTTP/2 替代实现。

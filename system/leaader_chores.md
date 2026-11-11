@@ -1,0 +1,7 @@
+
+
+<!-- docs/system/leadership_chores.md -->
+In a technical context, the roles of a lead and a coach can have distinct but complementary aspects.
+A technical lead typically focuses on guiding and directing the technical aspects of a project or team. This may include making key technical decisions, providing technical guidance to team members, coordinating technical tasks, and ensuring that the technical architecture aligns with project requirements. Technical leads often have a deep understanding of the technology stack being used and are responsible for ensuring the technical success of the project.
+On the other hand, a technical coach may focus on developing the skills and capabilities of individual team members. A technical coach helps team members improve their technical skills, overcome challenges, and grow in their roles. This could involve providing one-on-one mentoring, offering technical training and guldance, and fostering a culture of continuous learning and improvement within the team.
+While a technical lead may provide guidance on specific technical tasks and decisions, a technical coach typically focuses on the broader development of individuals within the team. Both roles are Important in ensuring the success and growth of a technical team, with the lead guiding the technical direction of the work and the coach nurturing the technical capabilities and growth of team members.
