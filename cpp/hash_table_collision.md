@@ -1,46 +1,69 @@
-K! -- docs/cpp/hash
-_table_collision.md -->
+<!-- docs/cpp/hash_table_collision.md -->
+
 # Hash Table Collisions
-Hash table collisions occur when two different keys hash to the same index in the underlying array.
+
+Hash table collisions occur when two different keys hash to the same index in the
+underlying array.
+
 ## Why they happen
-A hash function maps a potentially infinite key space to a finite number of buckets. By the pigeonhole principle, collisions are inevitable once the number of keys exceeds the number of buckets (and likely well before that).
+
+A hash function maps a potentially infinite key space to a finite number of buckets. By
+the pigeonhole principle, collisions are inevitable once the number of keys exceeds the
+number of buckets (and likely well before that).
+
 *# Resolution strategies
+
 Chaining (separate chaining)
--   Each bucket holds a linked list (or other collection) of entries.
--   On collision, the new entry is appended to the list at that index.
--   Lookup walks the list, comparing keys.
--   Degrades to o(n) per bucket in the worst case; o(1) average with a good hash and lowLoad factor.
-I
+
+- Each bucket holds a linked list (or other collection) of entries.
+- On collision, the new entry is appended to the list at that index.
+- Lookup walks the list, comparing keys.
+- Degrades to o(n) per bucket in the worst case; o(1) average with a good hash and lowLoad factor.
+
 open addressing
--  All entries live in the array itself. on collision, probe for the next available slot.
--   Common probing schemes:
--   *Linear probing* - check index+1, index+2, -. (simple but prone to clustering)
--   *Quadratic probing* - check index+12, index+2, - (reduces clustering)
--   *Double hashing* - use a second hash function to determine the step size
--   Deletion is trickier (requires tombstone markers or rehashing).
+
+- All entries live in the array itself. on collision, probe for the next available slot.
+- Common probing schemes:
+- *Linear probing* - check index+1, index+2, -. (simple but prone to clustering)
+- *Quadratic probing* - check index+12, index+2, - (reduces clustering)
+- *Double hashing* - use a second hash function to determine the step size
+- Deletion is trickier (requires tombstone markers or rehashing).
+
 Robin Hood hashing
-- A variant of open addressing where entries can be displaced if the new entry has a longer probe distance, reducing variance in lookup times.
+
+- A variant of open addressing where entries can be displaced if the new entry has a
+- longer probe distance, reducing variance in lookup times.
+
 ## Mitigating collisions
 
--   **Good hash function** - uniform distribution across buckets (e.g., MurmurHash, SipHash, xxHash).
--   **Load factor management** - resize (typically double) the table when load factor
+- **Good hash function** - uniform distribution across buckets (e.g., MurmurHash, SipHash,
+  xxHash).
+- **Load factor management** - resize (typically double) the table when load factor
+  exceeds a threshold (commonly 0.7- 0.75).
+- **Prime-sized tables** - help distribute entries more evenly with certain hash functions.
+- 
+## Quick complexity summary
 
 strategy	Average lookup	I Worst case lookup |
 Chaining	----
 0(1)	---o(n)
 I open addressing	| 0(1)	10(n)
-exceeds a threshold (commonly 0.7- 0.75)•
-**Prime-sized tables**- help distribute entries more evenly with certain hash functions.
-## Quick complexity summary
--
-Both degrade to o(n) only under pathological hash functions or adversarial input. In practice, with a decent hash and reasonable load factor, lookups stay near o(1).
-Want me to dive deeper into any specific aspect - implementation details, a particular language's approach, or performance trade-offs?
-• Credits: 0.08 • Time: 13s
-1% > show me an example of why it happens in ct+ or go
-I
-› Here are examples in both languages showing collisions in action.
+
+Both degrade to o(n) only under pathological hash functions or adversarial input. In
+practice, with a decent hash and reasonable load factor, lookups stay near o(1).
+
+Let me to dive deeper into any specific aspect - implementation details, a particular language's approach, or performance trade-offs?
+
+> Here are examples in both languages showing collisions in action.
+
 ## C++
-cpp #include <iostream› #include ‹ vector› #include < list> #include ‹string>
+
+```cpp
+#include <iostream>
+#include < vector>
+#include < list>
+#include <string>
+
 // Simple hash table with chaining to demonstrate collisions class HashTable { static
 const int SIZE = 4; // intentionally small to force collisions
 std:: vector/std:: list\std::pair\<std::string, int>> buckets;
@@ -50,15 +73,14 @@ for (char c : key) {
 Sum += c;
 return sum% SIZE;
 }
-...
 
 public: HashTable() : buckets(SIZE) +
 void insert(const std: :string& key, int value) {
 int idx = hash(key);
 std:: cout « "Key \*" « key « "|" -> hash index " « idx « "\n"; buckets[idx]. emplace_back(key, value);
-」
+
 void print() {
-for (int i = 0; i ‹ SIZE; i++) { std:: cout « "Bucket " « i «": ";
+for (int i = 0; i < SIZE; i++) { std:: cout « "Bucket " « i «": ";
 for (auto& [k, v] : buckets[i]) {
 std: cout « "[" « k«"-"«< v «"] ";
 std:: cout « "\n";
@@ -66,7 +88,7 @@ std:: cout « "\n";
 int main() { HashTable ht;
 // These keys will collide because our hash is just sum of chars % 4
 ht.insert("ab", 1); || 'a'(97) + 'b'(98) = 195, 195 % 4 = 3
-ht.insert(ba", 2); // 'b' (98) + 'a'(97) = 195, 195 % 4 = 3 ‹- collision! ht.insert(" cd", 3); // 'c' (99) + "d(100) = 199, 199% 4 = 3 ‹- collision! ht.insert("he11o", 4);
+ht.insert(ba", 2); // 'b' (98) + 'a'(97) = 195, 195 % 4 = 3 <- collision! ht.insert(" cd", 3); // 'c' (99) + "d(100) = 199, 199% 4 = 3 <- collision! ht.insert("he11o", 4);
 std:: cout « "InFinal state: \n"; ht.print();
 return ø;
 ..•
@@ -98,10 +120,10 @@ ht.insert("ab"
 // 97+98 = 195, 195%4 = 3
 ht.insert("ba"
 , 2)
-// 98+97 = 195, 195%4 = 3 ‹- collision!
+// 98+97 = 195, 195%4 = 3 <- collision!
 
 ht.insert ("cd", 3)
-// 99+100 = 199, 199%A = 3 ‹- collision!
+// 99+100 = 199, 199%A = 3 <- collision!
 ht. insert ("hello", 4)
 fit.Println("\nFinal state:")
 ht.print()
@@ -121,10 +143,10 @@ The collision happens because the hash function loses information - it only cons
 I
 > Here are both snippets extended with the two main resolution strategies.
 ## C++ - Chaining vs Open Addressing (Linear Probing)
-con #include «iostream› #include ‹vector> #include ‹list› #include ‹string>
+con #include «iostream> #include <vector> #include <list> #include <string>
 #include
 
-‹optional>
+<optional>
 // shared hash function int hash(const std: string& key, int size) fint sum = 0; for
 (char c : key) { sum += c; } return sum % size; }
 //
@@ -156,7 +178,7 @@ buckets [idx]. remove_if([&](auto& p) {return p.first = key; });
 I
 void print() {
 for (int i = 0; i < SIZE; i++) {
-std:: cout ‹< " Bucket " «< i «<"; ";
+std:: cout << " Bucket " «< i «<"; ";
 
 
 for (auto& [k, v]: buckets [1]) {
@@ -214,7 +236,7 @@ if (id == start) return;
 I
 }
 void print() {
-for (int i = 0; i ‹ SIZE; i++) { std:: cout « " slot " « i «"; ";
+for (int i = 0; i < SIZE; i++) { std:: cout « " slot " « i «"; ";
 if (table[i]. deleted) std: :cout « "[TOMBSTONE]";
 else if (table[i].occupied) std: icout « "[" « table[i].key « "=" « table[i]. value « "1"; else std:: cout «< "[EMPTY]";
 std:: cout « "\n";

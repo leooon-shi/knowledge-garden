@@ -1,4 +1,5 @@
-- docs/cpp/11vm_directory_structure.md
+<!-- docs/cpp/11vm_directory_structure.md -->
+
 Add a **quiz and practical assessment** to every directory. The learner should pass each phase before moving to the next one.
 11vm-learning/ - 01-ir-inspection/ - 02-ir-builder/- 03-kaleidoscope/H
 64-analysis-pass/ 05-transformation-pass/ - 06-clang-tool/ - o7-orc-jit/ H
@@ -26,7 +27,7 @@ The learner should understand:
 , "load , and "store
 - Branches and phi nodes
 
-# el-エr-inspection
+# el-Ir-inspection
 ## Quiz
 1.    What is the role of Clang in the LLVM compilation process?
 2.    What is the difference between LLVM assembly and LLVM bitcode?
