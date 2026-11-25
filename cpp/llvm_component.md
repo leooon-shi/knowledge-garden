@@ -362,11 +362,11 @@ The LLVM MC layer handles machine-code and assembly-related tasks.
 
 It supports:
 
--   Assembly parsing
--   Assembly printing
--   object-file generation
--   Instruction encoding
--   Instruction decoding
+- Assembly parsing
+- Assembly printing
+- Object-file generation
+- Instruction encoding
+- Instruction decoding
 - Disassembly
 
 Simplified architecture:

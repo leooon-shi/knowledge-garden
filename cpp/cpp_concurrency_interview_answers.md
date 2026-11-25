@@ -3,7 +3,7 @@
 # C++ concurrency interview answers
 
 Answers to [`cpp_concurrency_interview.md`](cpp_concurrency_interview.md). Sections and
-numbering match the questions file: `Q1`- `Q245` are the numbered questions and `C1=`C10`
+numbering match the questions file: `Q1`- `Q245` are the numbered questions and `C1`-`C10`
 are the code-based questions. Link to an answer with its anchor, for example
 `cpp_concurrency_interview_answers.md#q42`.
 
@@ -20,24 +20,24 @@ overlapping time periods, which a single core can achieve by interleaving them.
 Parallelism is about execution: literally running multiple tasks at the same instant,
 which requires multiple hardware execution units. A program can be concurrent without
 being parallel (coroutines on one core) and the two concerns are orthogonal: concurrency
-is away of composing independent activities, parallelism is a runtime property of doing
+is a way of composing independent activities, parallelism is a runtime property of doing
 them simultaneously.
 
 #### Q2
 
 **What is the difference between a process, a thread, and a task?**
 
-A process is an 05-level unit of isolation with its own virtual address space, file
+A process is an OS-level unit of isolation with its own virtual address space, file
 descriptors, and resources. A thread is a unit of scheduling that executes within a
 process and shares that process's address space with sibling threads, having only its own
 stack, registers, and thread-local storage. A task is a logical unit of work, an
 abstraction independent of how it is run; it may be mapped onto a thread, run on a thread
-pool, or executed inline. Threads and processes are 05 concepts with real costs, whereas a
+pool, or executed inline. Threads and processes are OS concepts with real costs, whereas a
 task is a programming-model concept.
 
 #### Q3
 
-**what are the advantages and disadvantages of using multiple threads?**
+**What are the advantages and disadvantages of using multiple threads?**
 
 Advantages: they can exploit multiple cores for throughput, keep the program responsive by
 moving blocking work off the critical path, and overlap I/O latency with computation.
@@ -58,7 +58,7 @@ condition, distinct from the more general notion of a race condition.
 
 #### Q5
 
-**what is the difference between a data race and a race condition?**
+**What is the difference between a data race and a race condition?**
 
 A data race is the specific, language-defined UB of unsynchronized conflicting memory
 accesses. A race condition is a broader logic flaw where the correctness of the result
@@ -71,7 +71,7 @@ steps), and fixing all data races does not guarantee freedom from race condition
 
 **What is undefined behavior in a multithreaded C++ program?**
 
-The most common source is a data race, which [intro.races] defines as UB, Other examples
+The most common source is a data race, which [intro.races] defines as UB. Other examples
 include destroying a `std::thread` that is still joinable (calls `std::terminate`), using
 an object after its lifetime ends from another thread, or torn reads/writes of non-atomic
 objects. Under UB the compiler is permitted to assume the situation never happens and may
@@ -129,15 +129,15 @@ protection for subsequent accesses.
 
 Thread affinity is the binding of a thread to a specific CPU or set of CPUs so the
 scheduler keeps it there rather than migrating it. The main benefit is preserving cache
-locality (L1/2 and TB warth) and NUMA locality, reducing cross-core cache traffic. It
-is an 05 feature (`sched_setaffinity`, `SetThreadAffinityMask`), not part of standard C++,
+locality (L1/2 and TLB warth) and NUMA locality, reducing cross-core cache traffic. It
+is an OS feature (`sched_setaffinity`, `SetThreadAffinityMask`), not part of standard C++,
 and overusing it can hurt by preventing the scheduler from balancing load.
 
 #### Q12
 
 **What is the difference between CPU-bound and I/O-bound workloads?**
 
-A CU-bound workload is limited by compute throughput; its threads spend most of their
+A CPU-bound workload is limited by compute throughput; its threads spend most of their
 time executing on a core, so the useful degree of parallelism is roughly the number of
 cores. An I/O-bound workload is limited by waiting on external resources (disk, network,
 locks); its threads spend most of their time blocked, so you can profitably run far more
@@ -160,7 +160,7 @@ fraction, so past a point more threads add cost without adding throughput.
 **What is oversubscription?**
 
 Oversubscription is running more active (runnable) threads than there are hardware
-execution contexts. The 0S must time-slice them, incurring context-switch cost, scheduler
+execution contexts. The OS must time-slice them, incurring context-switch cost, scheduler
 overhead, and cache/TLB pollution as threads are evicted and reloaded. A modest amount can
 help hide I/O latency, but for CPU-bound work it generally degrades throughput and
 increases latency jitter.
@@ -173,14 +173,14 @@ Starvation is when a thread is perpetually denied the resources (CPU time, a loc
 slot) it needs to make progress, because other threads keep acquiring them first. Causes
 include unfair locks, aggressive priority scheduling where high-priority threads
 monopolize the CPU, or a steady stream of competitors that always win a race for a
-resource, Fairness mechanisms (FIFO queues, fair mutexes, aging) mitigate it.
+resource. Fairness mechanisms (FIFO queues, fair mutexes, aging) mitigate it.
 
 #### Q16
 
 **What is livelock?**
 
 In livelock, threads are not blocked and are actively executing, but they keep responding
-to each other's state changes in away that prevents any of them from making real
+to each other's state changes in a way that prevents any of them from making real
 progress, like two people repeatedly stepping aside in the same direction in a corridor.
 It often arises from naive deadlock-avoidance schemes where threads detect contention,
 back off, and retry in lockstep. Randomized backoff breaks the symmetry.
@@ -193,7 +193,7 @@ Deadlock is a state where a set of threads are each permanently blocked waiting 
 resource held by another thread in the set, so none can proceed. It requires the four
 Coffman conditions to hold simultaneously: mutual exclusion, hold-and-wait, no preemption,
 and circular wait. Breaking any one of them (e.g. imposing a global lock-ordering to
-prevent circular wait prevents deadlock.
+prevent circular wait) prevents deadlock.
 
 #### Q18
 
@@ -220,7 +220,7 @@ it before the `std::thread` object is destroyed.
 
 #### Q20
 
-**What happens if a std::thread" object is destroyed while it is still joinable?**
+**What happens if a `std::thread` object is destroyed while it is still joinable?**
 
 The destructor calls `std::terminate()`, aborting the program. This is a deliberate design
 choice (rationale in Hans Boehm's paper N2802): silently joining could cause unexpected
@@ -232,7 +232,7 @@ goes out of scope (or use `std::jthread`, which joins automatically).
 
 #### Q21
 
-**what is the difference between `join()` and `detach()` ?**
+**What is the difference between `join()` and `detach()`?**
 
 `join()` blocks the calling thread until the target thread finishes and then releases its
 resources; afterward the `std::thread` is non-joinable. `detach()` severs the association,
@@ -247,7 +247,7 @@ After either call `joinable()` returns false. You must call exactly one of them.
 When the detached thread outlives objects it references. Because you lose the handle, you
 cannot join it at shutdown, so it may still be running and touching globals, captured
 references, or static data as they are destroyed (including during program exit),
-producing data races or use-after-free, Detached threads also swallow any way to observe
+producing data races or use-after-free. Detached threads also swallow any way to observe
 completion or propagate exceptions. In practice an owned, joined thread (or `jthread`)
 with cooperative cancellation is almost always safer.
 
@@ -288,9 +288,9 @@ cancellation channel.
 
 Cancellation is cooperative, meaning it only requests a stop; the running code must check
 for it and return voluntarily (threads cannot be forcibly killed in standard C++). The
-`jthread` owns a `std::stop_source`: calling `request_stop()` (or the `jthread`
-destructor) sets the shared stop state. The worker receives a std: : stop_token and
-periodically checks and `token.stop_requested()`, or registers a `std::stop_callback` to be
+`jthread` owns a `std::stop_source`; calling `request_stop()` (or the `jthread`
+destructor) sets the shared stop state. The worker receives a `std::stop_token` and
+periodically checks `token.stop_requested()`, or registers a `std::stop_callback` to be
 invoked on request so it can, e.g., wake a condition variable.
 `std::condition_variable_any::wait` has overloads taking a stop_token to make blocking
 waits cancellable.
@@ -302,7 +302,7 @@ waits cancellable.
 If an exception propagates out of the top-level function of a thread (and is not caught
 within it), `std::terminate()` is called, ending the program. Exceptions do not cross
 thread boundaries implicitly. To handle this you must catch the exception inside the
-thread and transfer it explicitly, for example via std::exception_ptr and
+thread and transfer it explicitly, for example via `std::exception_ptr` and
 `std::current_exception()`, or by using `std::promise`/`std::packaged_task`/`std::async`,
 which capture it into the associated future.
 
@@ -314,7 +314,7 @@ Catch the exception in the worker and capture it with `std::current_exception()`
 the resulting `std::exception_ptr` in shared state; the consumer rethrows it with
 `std::rethrow_exception()`. The higher-level mechanisms do this for you:
 `std::promise::set_exception(std::current_exception())` surfaces it through the paired
-`std::future`, and `std::async`/`std::packaged_task` automatically store any escaping
+`std::future`, and `std::async` / `std::packaged_task` automatically store any escaping
 exception in the future so it is rethrown when `get()` is called.
 
 #### Q29
@@ -344,23 +344,23 @@ void start() {
 }
 ```
 
-The Lambda captures `value` by reference, and the thread is detached, so `start()`
-returns and destroys `value` while the detached thread may st1l1 be running. When `use(value)`
+The Lambda captures `value` by reference, and the thread is detached, so `start()` returns
+and destroys `value` while the detached thread may st1l1 be running. When `use(value)`
 executes it reads through a dangling reference to a destroyed stack variable: a data race
-/ use-after-free, which is undefined behavior, Detach makes it worse because there is no
-join to bound the lifetime, Fix by capturing by value (so the thread owns its own copy):
+/ use-after-free, which is undefined behavior. Detach makes it worse because there is no
+join to bound the lifetime. Fix by capturing by value (so the thread owns its own copy):
 
 ```cpp
 void start() {
     int value = 42;
-    std::thread worker([value] {    // capture by value
+    std::thread worker([value] {   // capture by value
         use(value);
     });
     worker.join();                  // or jthread; avoid bare detach
 }
 ```
 
-*follow-up:* even with by-value capture, prefer `std::jthread` with `join()` so the thread
+*Follow-up:* even with by-value capture, prefer `std::jthread` with `join()` so the thread
 is bounded and exceptions/cancellation are handled.
 
 
@@ -377,7 +377,7 @@ lifetime to use.
 
 #### Q32
 
-**What is the purpose of `std::thread:hardware_concurrency)`?**
+**What is the purpose of `std::thread::hardware_concurrency()`?**
 
 It is a static function returning a hint for the number of hardware thread contexts that
 can run truly concurrently (physical/logical cores). It is typically used to size a thread
@@ -389,12 +389,12 @@ about what the program is allowed to use.
 **Why should its return value not always be treated as the exact number of usable CPU
 cores?**
 
-Because it is explicitly documented as a hint and may return e when the value cannot be
+Because it is explicitly documented as a hint and may return 0 when the value cannot be
 determined, so you must handle that (fall back to a sensible default). It also does not
-account for CPU affinity masks, group CPU quotas (common in containers/Kubernetes),
+account for CPU affinity masks, cgroup CPU quotas (common in containers/Kubernetes),
 hyperthreading effects, or other processes competing for cores, so it can overstate the
 parallelism actually available to your process. For containerized deployments you often
-need to read the group quota instead.
+need to read the cgroup quota instead.
 
 ## Mutexes and locks
 
@@ -409,9 +409,9 @@ happens-before relationship: everything done before an `unlock()` is visible to 
 that subsequently acquires the lock. It should almost always be used through an RAII
 wrapper rather than locked/unlocked by hand.
 
-#### 035
+#### Q35
 
-**what is the difference between `std::mutex` and `std::recursive_mutex`?**
+**What is the difference between `std::mutex` and `std::recursive_mutex`?**
 
 A `std::mutex` must not be locked again by a thread that already holds it; doing so is
 undefined behavior (typically deadlock). A `std::recursive_mutex` allows the same thread
@@ -442,7 +442,7 @@ an already-locked mutex via `std::adopt_lock`.
 
 #### Q38
 
-**what is `std::unique_lock`?**
+**What is `std::unique_lock`?**
 
 `std::unique_lock` is a more flexible RAII lock wrapper that supports deferred locking
 (`std::defer_lock`), adopting (`std::adopt_lock`), timed and try-locking, manual
@@ -453,7 +453,7 @@ compared to `lock_guard`.
 
 #### Q39
 
-**What is the difference between "std:: lock_guard" and std: unique_lock ?**
+**What is the difference between "std::lock_guard" and std::unique_lock ?**
 
 `lock_guard` is fixed-scope, non-movable, lock-on-construct/unlock-on-destroy, and has
 essentially zero overhead beyond the lock itself. `unique_lock` is movable and supports
@@ -464,11 +464,11 @@ to move ownership.
 
 #### Q40
 
-**when would you use `std::scoped_lock`?**
+**When would you use `std::scoped_lock`?**
 
 Use `std::scoped_lock` (C++17) as the default RAII guard, especially when locking two or
 more mutexes at once, because it locks them all using a deadlock-avoidance algorithm. With
-a single mutex it behaves 1ike `lock_guard`. It supersedes the old pattern of
+a single mutex it behaves like `lock_guard`. It supersedes the old pattern of
 `std::lock(m1, m2)` followed by two `lock_guard`s with `adopt_lock`.
 
 #### Q41
@@ -517,12 +517,12 @@ so their result must always be checked.
 
 #### Q45
 
-**what is the difference between `try_lock()`, `try_lock_for()`, and `try_lock_until()`?**
+**What is the difference between `try_lock()`, `try_lock_for()`, and `try_lock_until()`?**
 
 `try_lock()` attempts to acquire the lock once and returns immediately with true/false,
-never blocking. `try_lock_ford()` blocks up to a relative duration `d` waiting for the
+never blocking. `try_lock_for(d)` blocks up to a relative duration `d` waiting for the
 lock, returning false if it cannot be obtained in time. `try_lock_until(tp)` blocks until
-an absolute time point `tp`, The timed variants require a timed mutex; all three return a
+an absolute time point `tp`. The timed variants require a timed mutex; all three return a
 bool you must check, and the timed ones are allowed to return false spuriously.
 
 #### Q46
@@ -531,9 +531,9 @@ bool you must check, and the timed ones are allowed to return false spuriously.
 
 Guard all variables that participate in a shared invariant with the same mutex, and ensure
 every read and write of any of them happens while holding that one lock, so the invariant
-is never observed in a half-updated state, Keep the data and its mutex together (e.g, as
+is never observed in a half-updated state. Keep the data and its mutex together (e.g, as
 members of a class whose methods lock), and perform the full logical update inside a
-single critical section rather than locking/unlocking between related steps, Using
+single critical section rather than locking/unlocking between related steps. Using
 separate mutexes for variables that must change together reintroduces race conditions.
 
 #### Q47
@@ -573,8 +573,8 @@ bottleneck and is measurable with profilers that report lock wait time.
 **How can lock contention be reduced?**
 
 Shrink the critical section; use finer-grained locks so independent data uses independent
-locks (eg. lock striping / sharding); replace shared mutable state with per-thread data that
-is aggregated occasionally; use reader-writer locks when reads dominate; use
+locks (e.g. lock striping / sharding); replace shared mutable state with per-thread data
+that is aggregated occasionally; use reader-writer locks when reads dominate; use
 lock-free atomics for simple counters; and reduce the frequency of locking by batching.
 Choosing a better algorithm or data layout that shares less is often more effective than
 tuning the lock itself.
@@ -595,7 +595,7 @@ try-lock/back-off, or lock-free structures mitigates it.
 **What is lock granularity?**
 
 Lock granularity describes how much data a single lock protects. Coarse granularity means
-one lock_guards a large amount of state (simple, but high contention); fine granularity
+one lock guards a large amount of state (simple, but high contention); fine granularity
 means many locks each guard a small piece (more parallelism, but more complexity and
 overhead). Choosing granularity is a central design trade-off between
 simplicity/correctness and scalability.
@@ -625,27 +625,27 @@ point where contention simply moves elsewhere, so the added complexity buys litt
 
 **How can a mutex be accidentally copied or moved?**
 
-It cannot, by design: std: mutex" is neither copyable nor movable (both the copy and move
+It cannot, by design: `std::mutex` is neither copyable nor movable (both the copy and move
 operations are deleted). The accidental trap is at the enclosing level, for instance
-writing a class that holds a std: mutex member and then relying on a compiler-generated
+writing a class that holds a `std::mutex` member and then relying on a compiler-generated
 copy/move constructor; because the mutex is non-copyable/non-movable, those special
 members are implicitly deleted, so the class silently becomes non-copyable/non-movable too
 (and attempts to copy it fail to compile). If you need a copyable type that contains a
 mutex you must write special members by hand that create a fresh mutex rather than copying
 it.
 
-*Red fLag:* trying to "move the lock state" with the object; the lock protects the object,
+*Red flag:* trying to "move the lock state" with the object; the lock protects the object,
 it is not part of its value.
 
 #### Q56
 
-**what is lock ordering, and how does it prevent deadlocks?**
+**What is lock ordering, and how does it prevent deadlocks?**
 
 Lock ordering is a convention that all threads acquire multiple locks in the same globally
 agreed order (for example by a fixed hierarchy or by comparing addresses). This eliminates
 the circular-wait Coffman condition, because you can never have a cycle of "A holds L1
 waiting for L2 while B holds L2 waiting for L1" if everyone always takes L1 before L2. It
-is the standard manual technique; std:: lock/ std:: scoped_lock achieve the same
+is the standard manual technique; `std::lock`/`std::scoped_lock` achieve the same
 guarantee automatically for locks taken together.
 
 #### Q57
@@ -681,7 +681,7 @@ It lets a thread wait efficiently for a condition on shared state to become true
 busy-polling, releasing the CPU until another thread signals a change. A naive spin loop
 over a flag wastes cycles and still needs a mutex to avoid races; a condition variable
 couples a wait with the mutex so the waiter atomically releases the lock and blocks, then
-reacquires the lock on wakeup. It solves the wait for an event produced by another
+reacquires the lock on wakeup. It solves the "wait for an event produced by another
 thread" coordination problem (e.g. a consumer waiting for a producer to enqueue work).
 
 #### Q60
@@ -706,7 +706,7 @@ condition.wait(lock, [&] {
 });
 ```
 
-Because `wait` can return without corresponding notification (spurious wakeup) and
+Because `wait` can return without a corresponding notification (spurious wakeup) and
 because a notification may have been delivered before the wait began. The predicate
 overload is exactly equivalent to `while (!pred()) wait(lock);`, so it re-checks the
 actual condition on every wakeup and only proceeds when it is genuinely satisfied. Without
@@ -718,7 +718,7 @@ you started waiting.
 
 **What is a spurious wakeup?**
 
-A spurious wakeup is when a thread blocked in "wait" returns even though no thread called
+A spurious wakeup is when a thread blocked in `wait` returns even though no thread called
 `notify_one`/`notify_all`. It is permitted by the standard (and by the underlying OS
 primitives such as futexes/pthreads) because preventing it would be more expensive. The
 practical consequence is that you can never assume a return from `wait` means the
@@ -738,7 +738,7 @@ which is why it is the preferred form.
 
 #### Q64
 
-**What is the difference between `notify_one()` and `notify_all()` ?**
+**What is the difference between `notify_one()` and `notify_all()`?**
 
 `notify_one` wakes at most one waiting thread; `notify_all` wakes every waiting thread.
 Use `notify_one` when a single unit of work was made available and any one waiter can
@@ -753,9 +753,9 @@ with a correct predicate is safe but may cause extra wakeups.
 **Can a notification be lost?**
 
 Yes. Notifications are not stored or queued: if `notify_one`/`notify_all` is called when
-no thread is currently blocked in wait, the notification has no effect and is simply
+no thread is currently blocked in `wait`, the notification has no effect and is simply
 lost. This is the classic lost-wakeup bug when the producer sets the condition and
-notifies before the consumer reaches wait. The fix is to check a predicate over shared
+notifies before the consumer reaches `wait`. The fix is to check a predicate over shared
 state under the mutex, so that a waiter that arrives after the state changed sees it is
 already true and never blocks.
 
@@ -767,12 +767,12 @@ A lost wakeup is a missed notification: an event/notify happened but no thread w
 to receive it, so a later waiter blocks forever (or until another notify). A spurious
 wakeup is the opposite: a waiter wakes with no notification at all. Both are defended
 against by the same technique: always wait on a predicate over shared state protected by
-the mutex. The predicate makes spurious wakeups harmless (re-wait and makes lost wakeups
+the mutex. The predicate makes spurious wakeups harmless (re-wait) and makes lost wakeups
 impossible (a late waiter sees the state is already true and does not block).
 
 #### Q67
 
-**What is the purpose of `wait_for()` and `wait_until()` ?**
+**What is the purpose of `wait_for()` and `wait_until()`?**
 
 They are timed waits: `wait_for` blocks for at most a relative duration and `wait_until`
 until an absolute time point, instead of waiting indefinitely. They let you bound how long
@@ -786,7 +786,7 @@ internally to absorb spurious wakeups while respecting the deadline.
 **How would you implement a producer-consumer queue using a condition variable?**
 
 Protect the queue with a mutex, use one condition variable for "non-empty", and wait on a
-predicate, The producer pushes under the lock and calls `notify_one`; the consumer waits
+predicate. The producer pushes under the lock and calls `notify_one`; the consumer waits
 until the queue is non-empty or shutdown, then pops.
 
 ```cpp
@@ -798,21 +798,22 @@ class Queue {
     bool stopped_ = false;
 public:
     void push(T v) {
-        { std::lock_guard lk(m_); q_.push(std::move(v));  }
+        { std::lock_guard lk(m_); q_.push(std::move(v)); }
         cv_.notify_one();
     }
     bool pop(T& out) {
         std::unique_lock lk(m_);
-        cv_.wait(lk, [8] { return !q_.empty() || stopped_; });
+        cv_.wait(lk, [&] { return !q_.empty() || stopped_; });
         if (q_.empty()) return false;        // stopped and drained
         out = std::move(q_.front());
         q_.pop();
         return true;
     }
     void stop() {
-        {std::lock_guard lk(m_); stopped_ = true; }
+        { std::lock_guard lk(m_); stopped_ = true; }
         cv_.notify_all();
-    };
+    }
+};
 ```
 
 #### Q69
@@ -821,9 +822,9 @@ public:
 
 Nothing is lost, provided the consumer waits on a predicate. The producer sets the shared
 state (pushes the item) under the mutex and notifies; even if that notify lands when no
-one is waiting and is therefore lost, the consumer's wait(lock, pred) first evaluates
+one is waiting and is therefore lost, the consumer's `wait(lock, pred)` first evaluates
 the predicate and sees the queue is already non-empty, so it returns immediately without
-blocking. If the consumer instead used a bare wait(lock) with no predicate, that early
+blocking. If the consumer instead used a bare `wait(lock)` with no predicate, that early
 notification would be lost and the consumer could block forever despite data being
 available.
 
@@ -832,7 +833,7 @@ available.
 **How should shutdown be implemented for a condition-variable-based worker queue?**
 
 Add a `stopped` flag protected by the same mutex and include it in the wait predicate
-(`return !queue.empty) || stopped;`). To shut down, set stopped - true under the lock
+(`return !queue.empty() || stopped;`). To shut down, set `stopped = true` under the lock
 and call `notify_all` so every blocked worker wakes. Workers should typically drain
 remaining items first and only exit once the queue is empty *and* `stopped` is set, which
 gives a clean "finish queued work then stop" semantics. Using `notify_all` (not
@@ -841,6 +842,7 @@ gives a clean "finish queued work then stop" semantics. Using `notify_all` (not
 ## Atomics and the C++ memory model
 
 #### Q71
+
 **What is `std::atomic`?**
 
 `std::atomic<T>` is a template wrapping a value so that operations on it are indivisible
@@ -853,12 +855,12 @@ data race and undefined behavior.
 
 #### Q72
 
-**why is incrementing a normal integer from multiple threads unsafe?**
+**Why is incrementing a normal integer from multiple threads unsafe?**
 
 `++x` on a plain `int` is not atomic: it is a load, an increment, and a store, so two
 threads can both read the same old value and each write back the same incremented value,
 losing an update. Worse, concurrent access where at least one is a write is a data race,
-which is undefined behavior in Ct, so the compiler may assume it never happens and
+which is undefined behavior in C++, so the compiler may assume it never happens and
 optimize accordingly. The fix is `std::atomic<int>` with `fetch_add`, or a mutex.
 
 #### Q73
@@ -867,7 +869,7 @@ optimize accordingly. The fix is `std::atomic<int>` with `fetch_add`, or a mutex
 
 No. `std::atomic<T>` guarantees atomicity and correct ordering but not that it is
 implemented without locks; for types the hardware cannot handle with a single instruction,
-the library may use an internal lock (eg. a lock pool). Whether a given type is lock-free
+the library may use an internal lock (e.g. a lock pool). Whether a given type is lock-free
 can be queried with `is_lock_free()` at runtime or `is_always_lock_free` at compile time.
 Only `std::atomic_flag` is guaranteed to be lock-free on every implementation.
 
@@ -879,7 +881,7 @@ It reports, for a particular atomic object at runtime, whether its operations ar
 implemented without locks (typically mapping to hardware atomic instructions). It can in
 principle vary by alignment or platform, which is why it is a member function rather than
 purely a compile-time trait. For a compile-time guarantee use the static
-`is always_lock_free` constant; if it is true, the type is lock-free on that
+`is_always_lock_free` constant; if it is true, the type is lock-free on that
 implementation unconditionally.
 
 #### Q75
@@ -899,8 +901,8 @@ establishes no ordering of other accesses.
 **What is the C++ memory model?**
 
 It is the part of the standard that defines how threads interact through memory: what
-constitutes a data race (UB), and the rules - happens-before, synchronizes-with,
-sequenced-before, and the modification order of each atomic - that determine which writes
+constitutes a data race (UB), and the rules – happens-before, synchronizes-with,
+sequenced-before, and the modification order of each atomic – that determine which writes
 a read may observe. It abstracts away specific CPU memory models so portable reasoning is
 possible. In short, if your program is free of data races and you respect the memory-order
 semantics of your atomics, the model defines exactly what results are permitted.
@@ -923,8 +925,8 @@ concurrent code.
 
 Synchronizes-with is an inter-thread ordering edge created by matching atomic operations,
 most importantly a release store that is observed by an acquire load of the same atomic
-object. when an acquire load reads the value written by a release store, the release
-"synchronizes with the acquire, and everything sequenced before the release in the writer
+object. When an acquire load reads the value written by a release store, the release
+"synchronizes with" the acquire, and everything sequenced before the release in the writer
 happens-before everything sequenced after the acquire in the reader. This is the mechanism
 that lets you publish non-atomic data through an atomic flag safely.
 
@@ -934,8 +936,8 @@ that lets you publish non-atomic data through an atomic flag safely.
 
 Sequential consistency means all sequentially-consistent operations across all threads
 appear to execute in a single total order that is consistent with each thread's program
-order. It is the strongest and most intuitive model - the default for `std::atomic`
-operations `memory_order_seq_cst`) - and it rules out the subtle reorderings that
+order. It is the strongest and most intuitive model – the default for `std::atomic`
+operations (`memory_order_seq_cst`) - and it rules out the subtle reorderings that
 acquire/release alone permit (such as the Dekker/store-buffer anomaly). The guarantee
 costs more on some hardware because it requires additional fences.
 
@@ -943,21 +945,21 @@ costs more on some hardware because it requires additional fences.
 
 **What are the C++ memory-order options?**
 
-- `memory_order_relaxed` - atomicity only, no ordering or synchronization with other
+- `memory_order_relaxed` – atomicity only, no ordering or synchronization with other
   accesses.
-- `memory_order_acquire` - on a load; no reads/writes after it can be reordered before it,
+- `memory_order_acquire` – on a load; no reads/writes after it can be reordered before it,
   and it can form a synchronizes-with edge.
-- `memory_order_release` - on a store; no reads/writes before it can be reordered after
+- `memory_order_release` – on a store; no reads/writes before it can be reordered after
   it, pairs with an acquire.
-- `memory_order_acqrel` - forread-modify-write ops; both acquire and release semantics.
-- `memory_order_seq_cst` - acquire/release plus participation in a single global total
+- `memory_order_acq_rel` – forread-modify-write ops; both acquire and release semantics.
+- `memory_order_seq_cst` – acquire/release plus participation in a single global total
   order; the default.
-- `memory_order_consume` - a weaker, dependency-ordered form of acquire; its use is
+- `memory_order_consume` – a weaker, dependency-ordered form of acquire; its use is
   discouraged and in practice every major compiler promotes it to acquire.
  
 #### Q81
 
-**When is **`memory_order_relaxed` appropriate?**
+**When is `memory_order_relaxed` appropriate?**
 
 When you need the operation to be atomic but do not need to order any other memory
 accesses relative to it. The classic example is a statistics counter incremented with
@@ -981,7 +983,7 @@ observes the released value.
 
 **What guarantee does an acquire operation provide?**
 
-An acquire load guarantees that once it reads a value written by a release store (on its
+An acquire load guarantees that once it reads a value written by a release store (or its
 release sequence), all memory writes the releasing thread made before that release are
 visible to the acquiring thread, and that no reads or writes sequenced after the acquire
 are reordered before it. In other words it "receives" the publication made by the release.
@@ -990,24 +992,24 @@ requires a matching release whose value it actually reads.
 
 #### Q84
 
-**why are acquire and release commonly used for producer-consumer communication?**
+**Why are acquire and release commonly used for producer-consumer communication?**
 
 Because they express exactly the publish/consume pattern cheaply: the producer writes the
 data (non-atomic) and then does a release store to a flag/index; the consumer does an
 acquire load of that flag and, once it sees the published value, is guaranteed to see all
-the data writes that preceeded the release. This gives correct visibility without the cost
+the data writes that preceded the release. This gives correct visibility without the cost
 of full sequential consistency and without a mutex. It is the standard idiom for lock-free
 single-writer publication and for ring-buffer head/tail indexes.
 
 #### Q85
 
-**what does "memory_order_seq_cst provide beyond acquire and release?**
+**What does "memory_order_seq_cst provide beyond acquire and release?**
 
-In addition to acquire and release semantics, all `seq_st` operations participate in a
+In addition to acquire and release semantics, all `seq_cst` operations participate in a
 single global total order observed consistently by every thread. This rules out anomalies
 that acquire/release permits, notably the store-buffer case where two threads each store
 to one variable with release and then load the other with acquire and both can read the
-old value. With seq_cst" such an outcome is forbidden because a consistent total order
+old value. With `seq_cst` such an outcome is forbidden because a consistent total order
 must exist.
 
 #### Q86
@@ -1015,7 +1017,7 @@ must exist.
 **Why is "memory_order_seg_cst" often easier to reason about?**
 
 Because you can reason as if there is one global interleaving of all atomic operations
-consistent with program order, which matches most programmers intuition and makes classic
+consistent with program order, which matches most programmers' intuition and makes classic
 concurrent algorithms behave as textbook analysis assumes. You avoid the subtle,
 hard-to-test reorderings that relaxed/acquire/release can expose. It is the default for
 exactly this reason: correct first, then weaken the ordering deliberately if profiling
@@ -1031,7 +1033,7 @@ such bugs are rare, hardware-dependent, and extremely hard to reproduce and test
 Performance: on strongly-ordered hardware like x86 you may gain little over
 acquire/release because loads/stores are already fairly ordered, so the added risk buys
 little. The guidance is to use relaxed only where no cross-thread ordering is needed (e.g.
-independent counters) and to default to `seq_st` otherwise.
+independent counters) and to default to `seq_cst` otherwise.
 
 #### Q88
 
@@ -1042,7 +1044,7 @@ object's modification order, by any number of read-modify-write operations (by a
 and relaxed stores by the same thread. An acquire load synchronizes-with the head release
 if it reads any value in this sequence, not only the original released value. This is what
 makes patterns like a reference-count decrement chain or a lock-free queue work: later
-RMs do not break the publication established by the original release.
+RMWs do not break the publication established by the original release.
 
 #### Q89
 
@@ -1070,25 +1072,25 @@ UB. Its legitimate uses are memory-mapped I/O and signal handlers
 
 #### Q91
 
-**hat is the difference between `volatile` and `std::atomic`?**
+**What is the difference between `volatile` and `std::atomic`?**
 
 `volatile` prevents the compiler from optimizing away or reordering accesses to a specific
 object but gives no atomicity, no memory-ordering across other objects, and no protection
 against CPU reordering or torn reads. `std::atomic` guarantees indivisible operations and
 provides the memory-order semantics that establish happens-before between threads. For
 thread communication use `std::atomic`; `volatile` is for hardware registers and signal
-handlers. (They are orthogonal - you can even have volatile `std::atomic<T>` for an MMIO
+handlers. (They are orthogonal – you can even have `volatile std::atomic<T>` for an MMIO
 atomic, though that is rare.)
 
 #### Q92
 
 **Can an atomic operation prevent all compiler and CPU reordering?**
 
-Only a `seq_st` operation (or a `seq_cst` fence) prevents reordering globally enough to
+Only a `seq_cst` operation (or a `seq_cst` fence) prevents reordering globally enough to
 enforce a single total order; weaker orders restrict reordering only in specific
 directions. `acquire` stops later accesses from moving before it and `release` stops
 earlier accesses from moving after it, but neither is a full barrier, and `relaxed`
-imposes no ordering on surrounding accesses at all. So atomic" does not automatically
+imposes no ordering on surrounding accesses at all. So "atomic" does not automatically
 mean "no reordering"; the memory order you choose determines exactly which reorderings are
 forbidden.
 
@@ -1105,10 +1107,10 @@ signaling.
 
 #### Q94
 
-**when would you use `std::atomic_flag` instead of `std::atomic<bool>`?**
+**When would you use `std::atomic_flag` instead of `std::atomic<bool>`?**
 
 Use `std::atomic_flag` when you need a guaranteed-lock-free primitive and only need
-set/clear/test semantics - classically to build a spinlock via `test_and_set`.
+set/clear/test semantics – classically to build a spinlock via `test_and_set`.
 `std::atomic<bool>` is more convenient (it supports plain `load`/`store`/`exchange` and
 reads like a boolean) but is not guaranteed lock-free on every platform, though in
 practice it almost always is. In modern C++ the ergonomic gap has narrowed since
@@ -1117,7 +1119,7 @@ choice unless the hard lock-free guarantee matters.
 
 #### Q95
 
-**what is `std::atomic_ref`?**
+**What is `std::atomic_ref`?**
 
 `std::atomic_ref<T>` (C++20) provides atomic operations on an existing non-atomic object
 referred to by the reference, without that object being declared `std::atomic`. It lets
@@ -1128,12 +1130,12 @@ you cannot change the type of, for the lifetime of the `atomic_ref`. While any
 
 #### Q96
 
-**what restrictions apply when using `std::atomic_ref`?**
+**What restrictions apply when using `std::atomic_ref`?**
 
 The referenced object must satisfy `atomic_ref<T>::required_alignment` (which can be
 stricter than `alignof(T)`); referencing a misaligned object is UB. For as long as any
-`atomic_ref` to an object exists, every access to that object - reads and writes, by any
-thread - must be made through an `atomic_ref`; mixing a plain access with atomic_ref
+`atomic_ref` to an object exists, every access to that object – reads and writes, by any
+thread – must be made through an `atomic_ref`; mixing a plain access with atomic_ref
 access is a data race. The referenced object must also outlive the `atomic_ref`, and the
 referent is not const.
 
@@ -1145,20 +1147,20 @@ No. `std::atomic` is neither copy-constructible nor copy-assignable (and not mov
 copy/move operations are deleted. This is because a "copy" would require atomically
 reading one object and writing another, which cannot be done as a single atomic step, so
 the standard forbids it to avoid a false sense of atomicity. You can construct from a
-plain `T`, and you can transfer a value explicitly via `b.store(a.load()`, accepting that
+plain `T`, and you can transfer a value explicitly via `b.store(a.load())`, accepting that
 the two loads/stores are separate atomic operations.
 
 #### Q98
 
 **How do you atomically update a compound value?**
 
-For a value that depends on the previous value (and is not a single built-in RMN like
-`fetch_add`), use a compare-and-exchange loop; load the current value, compute the new
+For a value that depends on the previous value (and is not a single built-in RMW like
+`fetch_add`), use a compare-and-exchange loop: load the current value, compute the new
 value, then `compare_exchange_weak(expected, desired)` and retry if it fails (expected is
-refreshed with the current value on failure), For simple arithmetic/bitwise updates,
-prefer the dedicated `fetch_add`/`fetch_sub`/`fetch_or`/etc, which are single atomic RMNS.
+refreshed with the current value on failure). For simple arithmetic/bitwise updates,
+prefer the dedicated `fetch_add`/`fetch_sub`/`fetch_or`/etc. which are single atomic RMWS.
 If the "compound" is really multiple independent variables that must change together, an
-atomic cannot express that transaction - use a mutex.
+atomic cannot express that transaction – use a mutex.
 
 ## Compare-and-exchange
 
@@ -1176,12 +1178,12 @@ it is `compare_exchange_weak`/`compare_exchange_strong`, each taking success and
 
 #### Q100
 
-**what is the difference between `compare_exchange_weak()` and
+**What is the difference between `compare_exchange_weak()` and
 `compare_exchange_strong()`?**
 
 `compare_exchange_strong` fails only when the values genuinely differ.
-`compare_exchange_weak` may also fail spuriously - returning false even though `expected`
-equals the current value - because on some architectures (LL/SC, e.g. ARM/PowerPC) the
+`compare_exchange_weak` may also fail spuriously – returning false even though `expected`
+equals the current value – because on some architectures (LL/SC, e.g. ARM/PowerPC) the
 primitive can be interrupted. `weak` can therefore be cheaper and is intended for use
 inside a retry loop where a spurious failure just costs one extra iteration; `strong` is
 preferred when there is no loop (a single-shot CAS) so a spurious failure would be wrong
@@ -1189,12 +1191,12 @@ or wasteful.
 
 #### Q101
 
-**why can compare_exchange weak) fail even when the comparison appears to succeed?**
+**Why can `compare_exchange weak()` fail even when the comparison appears to succeed?**
 
 Because on load-linked/store-conditional architectures the store-conditional can fail for
-reasons unrelated to the value an intervening interrupt, context switch, or cache-line
-eviction between the load-linked and the store-conditional - causing a spurious failure
-even though the value still equals `expected`.The standard explicitly permits this for
+reasons unrelated to the value – an intervening interrupt, context switch, or cache-line
+eviction between the load-linked and the store-conditional – causing a spurious failure
+even though the value still equals `expected`. The standard explicitly permits this for
 the weak form so implementations can map it directly to a single LL/SC attempt without an
 internal loop. The caller's own loop absorbs the spurious failure.
 
@@ -1203,7 +1205,7 @@ internal loop. The caller's own loop absorbs the spurious failure.
 **Why is the weak form usually used inside a loop?**
 
 ```cpp
-auto expected = old value;
+auto expected = old_value;
 
 while (!value.compare_exchange_weak(
     expected,
@@ -1232,15 +1234,15 @@ separate reload. On success, `expected` is left unchanged. Note that for the wea
 spurious failure also writes back the current value into `expected`, which simply equals
 what you already had.
 
-#### Q9104
+#### Q104
 
 **What is the ABA problem?**
 
 The ABA problem is when a CAS incorrectly succeeds because a value changed from A to B and
 back to A between a thread's read and its CAS, so the CAS sees "still A" and assumes
-nothing happened - when in fact the underlying state did change (e.g. a node was freed and
+nothing happened – when in fact the underlying state did change (e.g. a node was freed and
 reused). It is dangerous in pointer-based lock-free structures like stacks, where a reused
-address can corrupt the structure, CAS compares only the value (the pointer bits), not the
+address can corrupt the structure. CAS compares only the value (the pointer bits), not the
 history, so it cannot detect the intervening changes.
 
 #### Q105
@@ -1249,10 +1251,10 @@ history, so it cannot detect the intervening changes.
 
 By pairing the value with a monotonically increasing counter and CAS-ing the pair
 atomically: even if the pointer returns to A, the version/tag will have advanced, so the
-CAS sees A/N vs the current A/N+2 and correctly fails, Implementations either steal
+CAS sees A/N vs the current A/N+2 and correctly fails. Implementations either steal
 low/high bits of an aligned pointer for a tag (tagged pointer) or use a double-width CAS
 over {pointer, counter} (e.g. `cmpxchg16b`). This makes a return to the same value
-distinguishable from "never changed," Alternatives that avoid reuse altogether include
+distinguishable from "never changed." Alternatives that avoid reuse altogether include
 hazard pointers and epoch/RCU reclamation.
 
 #### Q106
@@ -1262,7 +1264,7 @@ hazard pointers and epoch/RCU reclamation.
 `fetch_add` is a single hardware atomic RMW: it always succeeds in one step, is wait-free,
 and is the right tool when the update is a fixed arithmetic delta independent of complex
 conditions. A CAS loop is general-purpose: it reads, computes an arbitrary new value from
-the old, and conditionally commits, retrying on contention - necessary when the new value
+the old, and conditionally commits, retrying on contention – necessary when the new value
 is a non-trivial function of the old (e.g. atomic max, clamping, updating a packed
 struct). Prefer `fetch_add` when it fits because it avoids retries and has predictable,
 lock-free progress.
@@ -1271,13 +1273,13 @@ lock-free progress.
 
 **How would you implement an atomic maximum operation?**
 
-There is no fetch max" for general types before C++26, so use a CAS loop: load the
+There is no `fetch_max` for general types before C++26, so use a CAS loop: load the
 current value, and if the candidate is larger, try to install it, retrying while another
 thread beats you.
 
 ```cpp
 void atomic_store_max(std::atomic<int>& a, int v) {
-    int cur = a.load (std::memory_order relaxed):
+    int cur = a.load(std::memory_order relaxed):
     while (v > cur &&
            !a.compare_exchange_weak(cur, v,
                 std::memory_order_release,
@@ -1297,7 +1299,7 @@ soon as some value >= v is present, never lowering the stored maximum.
 **When should a mutex be preferred over an atomic?**
 
 Prefer a mutex when the invariant spans more than one variable or a non-trivial critical
-section - anything a single atomic RM cannot express as one indivisible step. Mutexes are
+section – anything a single atomic RMW cannot express as one indivisible step. Mutexes are
 also clearer and less error-prone, allow arbitrary code (including calls that may block or
 throw) inside the critical section, and compose far better than hand-rolled atomic
 protocols. Reach for atomics only for small, well-understood, single-location operations
@@ -1308,7 +1310,7 @@ protocols. Reach for atomics only for small, well-understood, single-location op
 **When is an atomic counter appropriate?**
 
 When many threads need to increment/decrement a single integer and you only care about the
-aggregate value, not about ordering other data relative to it - e.g. statistics, hit
+aggregate value, not about ordering other data relative to it – e.g. statistics, hit
 counts, or reference counts. `fetch_add(1, relaxed)` is ideal for a pure counter
 (reference counts need release on decrement and acquire before destruction). It avoids
 mutex overhead and blocking. If the counter is highly contended, consider per-thread
@@ -1320,7 +1322,7 @@ counters aggregated later to avoid the cache-line ping-pong of one shared atomic
 
 Because atomics only make individual operations atomic; they cannot make a multi-variable
 invariant hold as a transaction, so naively "atomic-izing" each variable introduces subtle
-races between them, Lock-free code built from raw atomics is extremely hard to get right
+races between them. Lock-free code built from raw atomics is extremely hard to get right
 (memory ordering, ABA, reclamation) and hard to test, and it often is not even faster
 under contention due to cache-line contention and retries. Mutexes are simpler,
 composable, and frequently perform comparably; atomics should be a targeted optimization,
@@ -1332,10 +1334,10 @@ not a blanket replacement.
 
 No. Each atomic operation is independent and atomic only with respect to its own object;
 there is no way to update two separate atomics so that other threads see both changes as a
-single indivisible step, Another thread can observe one updated and the other not. If you
+single indivisible step. Another thread can observe one updated and the other not. If you
 need a multi-variable transaction, use a mutex to guard all of them together, or redesign
 so the related data fits in one atomically-updatable object (e.g. pack into a single word,
-or use a double-width CAS.
+or use a double-width CAS).
 
 #### Q112
 
@@ -1353,7 +1355,7 @@ immutable snapshot atomically.
 
 **Why can an atomic operation still be expensive?**
 
-Because an atomic RMN or a `seq_st` operation typically requires cache-coherency traffic
+Because an atomic RMW or a `seq_cst` operation typically requires cache-coherency traffic
 and/or memory fences: the core must obtain exclusive ownership of the cache line (RFO),
 which under contention causes the line to bounce between cores, and fences inhibit
 CPU/store-buffer optimizations. So even though it is "lock-free," a hot shared atomic can
@@ -1369,7 +1371,7 @@ Lock-based algorithms use mutual exclusion so that only one thread is in a criti
 section at a time; if the lock holder is delayed (preempted, blocked), other threads must
 wait, so overall progress depends on that thread. Lock-free algorithms use atomic
 operations (typically CAS loops) so that the system as a whole always makes progress
-regardless of any individual thread being delayed - no thread can block all others by
+regardless of any individual thread being delayed – no thread can block all others by
 holding a lock. Lock-free avoids deadlock, priority inversion, and convoying, at the cost
 of much greater complexity and the memory-reclamation problem.
 
@@ -1379,7 +1381,7 @@ of much greater complexity and the memory-reclamation problem.
 
 These are progress guarantees, from strongest to weakest. Wait-free: every thread
 completes its operation in a bounded number of its own steps, regardless of other threads
-- no starvation. Lock-free: at least one thread makes progress in a bounded number of
+– no starvation. Lock-free: at least one thread makes progress in a bounded number of
 steps system-wide, so the whole system progresses, but an individual thread can starve
 (e.g. always losing its CAS). Obstruction-free: a thread completes in bounded steps if it
 runs in isolation (no contention), but concurrent threads may indefinitely interfere, so
@@ -1415,8 +1417,8 @@ system-wide stalls, but not individual-thread starvation.
 False sharing occurs when two or more threads modify distinct variables that happen to
 reside on the same cache line. The cache-coherence protocol (e.g. MESI) works at
 cache-line granularity, so even though the threads touch logically independent data, each
-write invalidates the line in the other cores caches, forcing the line to bounce between
-cores, The result is correctness-neutral but can devastate performance, turning what looks
+write invalidates the line in the other cores' caches, forcing the line to bounce between
+cores. The result is correctness-neutral but can devastate performance, turning what looks
 like contention-free code into a heavily serialized workload.
 
 #### Q119
@@ -1425,7 +1427,7 @@ like contention-free code into a heavily serialized workload.
 
 If two variables sit within the same ~64-byte cache line (e.g. adjacent members of a
 struct or neighboring elements in an array), a write to one marks the entire line dirty
-and invalidates every other core's copy, A thread reading or writing the "othen" variable
+and invalidates every other core's copy. A thread reading or writing the "othen" variable
 then suffers a coherence miss and must re-fetch the line, even though its own datum never
 changed. The variables are independent at the language level but coupled at the hardware
 level because the line is the unit of coherence.
@@ -1437,7 +1439,7 @@ level because the line is the unit of coherence.
 ```cpp
 struct alignas(64) Counter {
     std::atomic<std::uint64_t> value{0};
-}
+};
 ```
 
 `alignas(64)` forces each object onto its own cache line (and pads its size up to a
@@ -1456,15 +1458,15 @@ Cache-line size is a microarchitectural choice made by the CPU designer, not the
 Most x86-64 and many ARM cores use 64-byte lines, but Apple M-series and some POWER chips
 use 128 bytes, and some adjacent-line prefetchers on x86 effectively couple two 64-byte
 lines. Because it varies, hard-coding 64 is fragile.
-`std: :hardware_destructive_interference_size` (C++17) exposes a hint, but it is a
-`compile-time constant* chosen by the implementation and may not match the CPU the binary
+`std::hardware_destructive_interference_size` (C++17) exposes a hint, but it is a
+*compile-time constant* chosen by the implementation and may not match the CPU the binary
 actually runs on, which is why 128-byte padding is sometimes the safer choice.
 
 #### Q122
 
 **Is aligning a variable to 64 bytes always sufficient?**
 
-No. On architectures with 128-byte lines or with adjacent-1ine (spatial) prefetchers that
+No. On architectures with 128-byte lines or with adjacent-line (spatial) prefetchers that
 pull in a 128-byte pair, 64-byte alignment still allows two hot objects to share an
 effective coherence unit. It also only aligns the start of the object; if the object is
 smaller than a line, a neighboring hot variable can share the remainder. The robust
@@ -1490,7 +1492,7 @@ A single shared atomic counter is a single cache line that every incrementing th
 acquire in exclusive state, serializing the increments and generating heavy coherence
 traffic (the line ping-pongs across cores). Per-thread counters give each thread its own
 line that it owns and writes without contention; aggregation happens rarely, by summing
-the per-thread values. This replaces contended atomic RMW operations per unit time with
+the per-thread values. This replaces N contended atomic RMW operations per unit time with
 N independent local writes, which scales far better.
 
 #### Q125
@@ -1510,20 +1512,20 @@ classic layout used in high-performance SPSC ring buffers.
 
 Sharing data means threads access the *same logical variable* and therefore genuinely need
 synchronization for correctness. Sharing a cache line (false sharing) means threads access
-"different* variables that merely happen to be colocated; there is no correctness
+*different* variables that merely happen to be colocated; there is no correctness
 requirement to share, only an accidental performance coupling imposed by the hardware's
 line granularity. True sharing is a design property; false sharing is a layout artifact
 you fix with padding/alignment without changing semantics.
 
-#### Q217
+#### Q127
 
 **How can object layout affect a multithreaded container?**
 
 Layout determines which fields land on the same cache line, so poor layout can put a
 mutex, a size counter, and head/tail pointers on one line that every operation touches,
-serializing otherwise independent operations, Grouping hot fields written by different
-roles (producer vs consumer) onto separate lines, and separating frequently-written flelds
-from read-mostly fields, reduces coherence traffic, Conversely, interleaving per-element
+serializing otherwise independent operations. Grouping hot fields written by different
+roles (producer vs consumer) onto separate lines, and separating frequently-written fields
+from read-mostly fields, reduces coherence traffic. Conversely, interleaving per-element
 metadata with data can cause element updates by different threads to collide on shared
 lines.
 
@@ -1545,15 +1547,15 @@ size and alignment tuning must account for concurrent write patterns, not just f
 
 `std::future<T>` is a one-time handle to the result of an asynchronous operation; it
 refers to a shared state that will eventually hold a value or an exception. You call
-`get()` (which blocks until the result is ready and then moves it out), `wait(),` or
-`wait_for()` / `wait_until()` for timed waiting. A default-constructed or already-consumed
+`get()` (which blocks until the result is ready and then moves it out), `wait()` or
+`wait_for()`/`wait_until()` for timed waiting. A default-constructed or already-consumed
 future holds no shared state and `valid()` returns false.
 
 #### Q130
 
-**What is 'std: promise ?**
+**What is 'std::promise ?**
 
-`std::promise<T>` is the producer-side counterpart to `std:future`: it owns a shared
+`std::promise<T>` is the producer-side counterpart to `std::future`: it owns a shared
 state into which a thread writes a result via `set_value()` or an exception via
 `set_exception()`. You obtain the associated future once with `get_future()`. Setting the
 value/exception makes the result ready and unblocks any waiter; destroying the promise
@@ -1565,7 +1567,7 @@ without setting anything stores a `broken_promise` exception in the shared state
 
 The promise and its future share a reference-counted shared state allocated on the heap.
 The producer thread calls `promise.set_value(x)` (or `set_exception`), which stores the
-result and signals readiness; the consumer thread calls `future.get()` , which blocks until
+result and signals readiness; the consumer thread calls `future.get()`, which blocks until
 ready and then retrieves (moves) the result. This provides a thread-safe, one-shot
 hand-off with a happens-before relationship: everything the producer did before
 `set_value` is visible to the consumer after `get`.
@@ -1587,7 +1589,7 @@ thread. This lets errors propagate across thread boundaries with full type infor
 `get()` has a precondition `valid() == true`, and it invalidates the future by moving the
 result out, so after the first successful call `valid()` becomes false. Calling `get()`
 again violates the precondition and is undefined behavior; standard implementations
-typically throw `std::future_error` with `std::future_errc: no_state`. If you need
+typically throw `std::future_error` with `std::future_errc::no_state`. If you need
 multiple retrievals or multiple waiters, use `std::shared_future`.
 
 #### Q134
@@ -1596,9 +1598,9 @@ multiple retrievals or multiple waiters, use `std::shared_future`.
 
 `std::async` launches a callable and returns a `std::future` for its result, handling the
 shared-state plumbing for you. Depending on the launch policy it may run the task on a new
-thread ( std: :launch: :async") or lazily on the calling thread at get() time
-(std: :launch: deferred"). Exceptions thrown by the task are captured and rethrown at
-get ()*.
+thread (`std::launch::async`) or lazily on the calling thread at `get()` time
+(`std::launch::deferred`). Exceptions thrown by the task are captured and rethrown at
+`get()`.
 
 #### Q135
 
@@ -1607,28 +1609,28 @@ get ()*.
 `std::launch::async` guarantees the task runs on a separate thread, starting (potentially)
 immediately and concurrently. `std::launch::deferred` performs lazy evaluation: the task
 does not run until `get()` or `wait()` is called, and then it runs synchronously on the
-calling thread, With deferred, no new thread is created and `wait_for` never reports
+calling thread. With deferred, no new thread is created and `wait_for` never reports
 `ready` (it returns `deferred`).
 
 #### Q136
 
 **Why can relying on the default launch policy be risky?**
 
-The default is `std::launch:async | std::launch::deferred`, letting the implementation
+The default is `std::launch::async | std::launch::deferred`, letting the implementation
 choose. If it picks deferred, the task never runs unless you call `get()`/`wait()`, so
 code that "fires and forgets" or polls with `wait_for` can deadlock or silently never
-execute. You also lose any guarantee of true concurrency, and thread-local state on timing
+execute. You also lose any guarantee of true concurrency, and thread-local state or timing
 assumptions break. Always pass an explicit policy when behavior matters.
 
 #### Q137
 
-**what is `std::packaged_task`?**
+**What is `std::packaged_task`?**
 
-`std::packaged_task<(Args...)>` wraps a callable so that invoking it stores the result
+`std::packaged_task<R(Args...)>` wraps a callable so that invoking it stores the result
 (or exception) into an associated shared state, which you access through `get_future()`.
 Unlike `std::async`, it does not launch anything itself: you invoke it explicitly,
 typically on a thread or inside a thread pool. It decouples "producing the future" from
-"deciding where/when to run, " making it the natural building block for custom schedulers.
+"deciding where/when to run," making it the natural building block for custom schedulers.
 
 #### Q138
 
@@ -1644,20 +1646,20 @@ flexibility, and a pool for throughput and resource control.
 
 #### Q139
 
-**what is the purpose of `std::shared_future`?**
+**What is the purpose of `std::shared_future`?**
 
-`std::shared_future<T>` allows the result of an asynchronous operation to be retrieve
-nultiple times and by multiple threads. Unlike `std::future`, its `get()` does not
+`std::shared_future<T>` allows the result of an asynchronous operation to be retrieved
+multiple times and by multiple threads. Unlike `std::future`, its `get()` does not
 invalidate the state and returns a const reference to the stored value, so many consumers
 can wait on and read the same result. You create one via `future.share()` or by copying an
-existing shared_future. Concurrent `get()` calls on the same shared future from different
+existing shared_future. Concurrent `get()` calls on the same shared_future from different
 threads are safe.
 
 #### Q140
 
 **What happens if a future referring to an asynchronous task is destroyed?**
 
-In general, destroying a std: future just releases its reference to the shared state and
+In general, destroying a `std::future` just releases its reference to the shared state and
 does not block. The special case is the future returned by `std::async` with
 `launch::async`: if it holds the *last* reference to the shared state, its destructor
 blocks until the task completes (effectively a join). Futures from `promise` or
@@ -1688,7 +1690,7 @@ yields more predictable latency and higher throughput under load.
 At minimum: a set of worker threads, a task queue (typically guarded by a mutex), a
 condition variable to wake idle workers when work arrives, and a stop/shutdown flag. You
 also need a submit interface that enqueues a callable and usually returns a `std::future`
-via `packaged_task`), plus join logic in the destructor to drain and stop cleanly.
+(via `packaged_task`), plus join logic in the destructor to drain and stop cleanly.
 
 #### Q143
 
@@ -1705,7 +1707,7 @@ shutdown, and new submissions after stop should be rejected.
 **How do worker threads wait for new tasks?**
 
 Each worker loops: acquire the queue mutex,
-`cv.wait(lock, [&] { return stop || !queue.empty(); })` so it sleeps while the queue is
+`cv.wait(lock, [&]{ return stop || !queue.empty(); })` so it sleeps while the queue is
 empty and no stop is requested, then dequeues a task, releases the lock, and runs the task
 outside the lock. The predicate form guards against spurious wakeups and lost
 notifications, and running the task without holding the mutex avoids blocking other
@@ -1719,7 +1721,7 @@ That is a policy choice. A *graceful* shutdown drains the queue, running all pen
 before workers exit. An *immediate* shutdown discards queued tasks and stops as soon as
 in-flight tasks finish. Futures tied to discarded tasks must be resolved somehow (e.g. a
 `broken_promise` exception when the `packaged_task` is destroyed unexecuted), so document
-and had that co waiters do not hang.
+and hand that so waiters do not hang.
 
 #### Q146
 
@@ -1754,7 +1756,8 @@ fine-grained, highly parallel workloads.
 
 #### Q149
 
-**HOW can task granularity affect thread-pool performance?**
+**How can task granularity affect thread-pool performance?**
+
 Too-fine granularity makes per-task overhead (enqueue, synchronization, wakeups,
 scheduling) dominate the actual work, so parallel speedup is lost to bookkeeping and
 contention. Too-coarse granularity limits parallelism and causes load imbalance, leaving
@@ -1797,13 +1800,13 @@ fair/weighted scheduling so every class guarantees some forward progress.
 
 **How do you prevent a task from waiting forever?**
 
-Use timeouts on waits (wait_for/ try_lock_for"), ensure shutdown is observable via a
-stop flag/stop_token checked in every blocking predicate, and avoid priority schemes
+Use timeouts on waits (`wait_for`/`try_lock_for`), ensure shutdown is observable via a
+stop flag/`stop_token` checked in every blocking predicate, and avoid priority schemes
 without aging. Avoid dependency cycles where a task in the pool blocks on another task
-that can never be scheduled see nested parallelism. Bounding queue depth and providing
-ancellation give every task a path to either run or fail promptly rather than hang.
+that can never be scheduled (see nested parallelism). Bounding queue depth and providing
+cancellation give every task a path to either run or fail promptly rather than hang.
 
-##### Q154
+#### Q154
 
 **What is nested parallelism, and why can it exhaust a thread pool?**
 
@@ -1832,7 +1835,7 @@ single-threaded use, not built-in thread safety.
 **Can multiple threads read the same container concurrently?**
 
 Yes. Concurrent calls to `const` member functions of a standard container on the same
-object are safe, as are read-only operations like `size()` iteration, and lookup,
+object are safe, as are read-only operations like `size()`, iteration, and lookup,
 provided no thread is modifying the container at the same time. Const correctness is the
 rule of thumb: if every thread only observes, no synchronization is needed.
 
@@ -1858,7 +1861,7 @@ storage and cannot be modified concurrently.
 
 #### Q159
 
-**what additional rules apply to `std::vector<bool>`?**
+**What additional rules apply to `std::vector<bool>`?**
 
 `std::vector<bool>` is a space-optimized specialization that packs booleans into bits, so
 multiple logical elements live in the same underlying word and `operator[]` returns a
@@ -1868,10 +1871,10 @@ share a word. Treat it as a single shared object for synchronization purposes.
 
 #### Q160
 
-**How would you make a std: vector" safe for concurrent access?**
+**How would you make a std::vector" safe for concurrent access?**
 
 Wrap it with external synchronization: guard all accesses with a `std::mutex` (or a
-`std::shared mutex` for many readers / rare writers), ensuring the lock covers compound
+`std::shared_mutex` for many readers / rare writers), ensuring the lock covers compound
 operations like check-then-use. For append-heavy patterns, consider reserving capacity up
 front to limit reallocation, or switch to a purpose-built concurrent structure. The key is
 that every access, including reads that overlap a write, goes through the same lock.
@@ -1892,16 +1895,16 @@ class BoundedQueue {
     std::size_t cap_;
 public:
     explicit BoundedQueue(std::size_t cap) : cap_(cap) {}
-    void push (T v) {
+    void push(T v) {
         std::unique_lock lk(m_);
-        not_full_.wait(lk, [&] { return q_.size() < cap_; });
-        q_.push(std::move(v)) ;
+        not_full_.wait(lk, [&]{ return q_.size() < cap_; });
+        q_.push(std::move(v));
         not_empty_.notify_one();
     }
 
-    T pop () {
-        std: unique_lock lk(m_);
-        not_empty_.wait(lk, [&] { return !q_.empty(); });
+    T pop() {
+        std::unique_lock lk(m_);
+        not_empty_.wait(lk, [&]{ return !q_.empty(); });
         T v = std::move(q_.front());
         q_.pop();
         not_full_.notify_one();
@@ -1918,7 +1921,7 @@ spurious wakeups, and a real design adds a stop flag to both predicates for shut
 **What is the difference between a blocking queue and a lock-free queue?**
 
 A blocking queue uses a mutex and condition variables: threads sleep when they cannot
-proceed, which is simple and CU-efficient under light load but can suffer contention,
+proceed, which is simple and CPU-efficient under light load but can suffer contention,
 priority inversion, and convoying. A lock-free queue uses atomic operations (CAS) so that
 at least one thread always makes progress without mutexes, avoiding blocking and sleeping,
 but it is far harder to implement correctly (memory reclamation, ABA) and does not
@@ -1938,7 +1941,7 @@ ordering. It is the simplest and fastest concurrent queue.
 
 **How does an SPSC queue differ from an MPSC or MPMC queue?**
 
-In SPSCeach index has a single writer, so plain atomic loads/stores with acquire-release
+In SPSC each index has a single writer, so plain atomic loads/stores with acquire-release
 suffice and no atomic read-modify-write is needed. MPSC has multiple producers contending
 on the tail, so producers need CAS or fetch-add to claim slots, while the single consumer
 stays simple. MPMC has contention on both ends, requiring atomic RMW and careful
@@ -1960,9 +1963,9 @@ contention loop, so correctness reasoning is local and straightforward.
 **What synchronization is needed for a multi-producer queue?**
 
 Multiple producers must atomically claim distinct slots, so you need an atomic
-read-modify-write: a fetch_add" on a monotonically increasing tail or a
-compareexchange loop to reserve a position. After claiming a slot a producer must
-publish its element with a release operation often via a per-slot sequence/ready flag) so
+read-modify-write: a `fetch_add` on a monotonically increasing tail or a
+`compare_exchange` loop to reserve a position. After claiming a slot a producer must
+publish its element with a release operation (often via a per-slot sequence/ready flag) so
 the consumer, using an acquire load, only reads fully-written slots. Simply CAS-ing the
 tail is not enough; you must also coordinate when a slot's data is visible.
 
@@ -1981,7 +1984,7 @@ and a full-queue policy decision.
 **What does the head index represent in a ring buffer?**
 
 Conventionally the head (or read index) marks the position of the next element to be
-*consumed* (dequeued). The consumer reads from head and then advances it, (Naming
+*consumed* (dequeued). The consumer reads from head and then advances it. (Naming
 conventions vary; some codebases swap head/tail, so the important invariant is that one
 index marks the next-to-read and the other the next-to-write.)
 
@@ -1991,28 +1994,28 @@ index marks the next-to-read and the other the next-to-write.)
 
 The tail (or write index) marks the position where the next element will be *produced*
 (enqueued). The producer writes at tail and then advances it. The occupancy of the queue
-is derived from the relationship between tall and head.
+is derived from the relationship between tail and head.
 
 #### Q170
 
 **How do you distinguish a full ring buffer from an empty ring buffer?**
 
-The ambiguity is that "head = tail can mean either empty or full. Two standard
+The ambiguity is that `head == tail` can mean either empty or full. Two standard
 solutions:
 
 ```cpp
 // (a) sacrifice one slot: capacity is N, usable is N-1
-bool empty() const { return head = tail; }
-bool full() const { return (tail + 1) % N == head; }
+bool empty() const { return head == tail; }
+bool full()  const { return (tail + 1) % N == head; }
 
 // (b) monotonically increasing unsigned counters (never wrapped into range)
 bool empty() const { return head == tail; }
-bool full() const { return tail - head == N;} // size - tail - head
+bool full()  const { return tail - head == N;}   // size - tail - head
 size_t size() const { return tail - head; }
 ```
 
 Option (b) uses free-running unsigned indices and masks only when addressing the array
-(`idx & (N-1)` for power-of-two N); `tail - head` gives the exact count and reiles on
+(`idx & (N-1)` for power-of-two N); `tail - head` gives the exact count and relies on
 well-defined unsigned wraparound. A separate count variable is a third option but adds a
 shared field both sides update.
 
@@ -2034,7 +2037,7 @@ non-power-of-two sizes on the hot path for performance.
 Unsigned arithmetic wraps modulo 2^n, which is exactly what you want for free-running
 counters, and `tail - head` remains correct across a wrap. But you must ensure the
 capacity is less than the modulus so the difference never becomes ambiguous, and be
-careful with comparisons: an underflow (eg. `head - tail` when you meant `tail - head`)
+careful with comparisons: an underflow (e.g. `head - tail` when you meant `tail - head`)
 yields a huge positive value rather than a negative, producing silent logic bugs. Signed
 indices, by contrast, invoke UB on overflow, so unsigned is correct but demands
 disciplined difference/comparison logic.
@@ -2048,7 +2051,7 @@ line in the consumer's cache and vice versa, so every enqueue/dequeue triggers c
 traffic even though the two sides touch different indices. Placing head and tail on
 separate cache lines (`alignas(hardware_destructive_interference_size)`), and caching the
 other side's index locally, eliminates this ping-pong and is the single biggest
-performance win for SPsCring buffers.
+performance win for SPSC ring buffers.
 
 #### Q174
 
@@ -2064,9 +2067,9 @@ stable rather than collapsing under overload.
 
 **Should a full queue block, drop, overwrite, or reject new data?**
 
-It depends on the data's semantics, *Block* when no item may be lost and producers can
-wait (reliable work pipelines),*Reject* (fail fast) when callers can shed or retry and
-you must not stall producers, *Drop* (oldest or newest) or overwrite* when only fresh
+It depends on the data's semantics. *Block* when no item may be lost and producers can
+wait (reliable work pipelines). *Reject* (fail fast) when callers can shed or retry and
+you must not stall producers. *Drop* (oldest or newest) or *overwrite* when only fresh
 data matters and staleness is worse than loss (sensor samples, live telemetry, video
 frames). The decision trades completeness against latency and liveness.
 
@@ -2078,8 +2081,8 @@ For packet forwarding, latency and freshness usually outweigh perfect delivery (
 layers often retransmit), so under overload dropping packets (tail-drop or a RED-style
 early drop) is typically preferable to blocking, since blocking a forwarding thread stalls
 all downstream traffic and inflates latency for everyone. Use a bounded lock-free (or SPSC
-per-core) ring sized for burst tolerance, cache-1ine-separated indices, and a drop policy
-with counters for observability, Blocking/backpressure may be used selectively toward
+per-core) ring sized for burst tolerance, cache-line-separated indices, and a drop policy
+with counters for observability. Blocking/backpressure may be used selectively toward
 trusted internal producers, but on the fast path you generally drop and measure rather
 than stall.
 
@@ -2089,8 +2092,8 @@ than stall.
 
 **What does lock-free programming mean?**
 
-Lock-free means the algorithm guarantees system-wide* progress: at any point, at least
-one thread will complete its operation in a bounded number of steps, regardless of delays.
+Lock-free means the algorithm guarantees *system-wide* progress: at any point, at least
+one thread will complete its operation in a bounded number of steps, regardless of delays,
 preemption, or failure of other threads. It is defined by this progress property, not by
 the mere absence of the word "mutex." Crucially, individual threads can still starve;
 lock-free guarantees the system as a whole advances, not that every thread does.
@@ -2100,7 +2103,7 @@ lock-free guarantees the system as a whole advances, not that every thread does.
 **What are the main difficulties of writing lock-free code?**
 
 The hardest problems are safe memory reclamation (you cannot free a node while another
-thread may still dereference it, the ABA problem, and getting memory ordering exactly
+thread may still dereference it), the ABA problem, and getting memory ordering exactly
 right so publication and consumption are correctly synchronized. CAS-retry loops must
 handle contention and interleavings you cannot easily enumerate, and bugs are rare,
 timing-dependent, and nearly impossible to reproduce. Testing is weak evidence, so
@@ -2133,7 +2136,7 @@ the node.
 
 Hazard pointers let each thread publish, in a per-thread single-writer slot, the pointer
 it is currently about to dereference. Before freeing a retired node, the reclaiming thread
-scans all threads hazard pointers; if the node is listed by any thread, freeing is
+scans all threads' hazard pointers; if the node is listed by any thread, freeing is
 deferred, otherwise it is safe to delete. This bounds the number of unreclaimed nodes and
 is robust to stalled threads. C++26 standardizes this as `std::hazard_pointer`.
 
@@ -2155,9 +2158,9 @@ grow unboundedly.
 RCU is a reclamation/synchronization technique optimized for read-mostly data: readers
 access the structure with essentially no synchronization inside a "read-side critical
 section," while a writer makes a modified copy, atomically publishes it, and defers
-freeing the old version until a *grace period* has elapsed, 1.e. all pre-existing readers
-have finished, This gives extremely cheap, wait-free reads at the cost of more expensive,
-deferred updates, C++26 adds `std::rcu`.
+freeing the old version until a *grace period* has elapsed, i.e. all pre-existing readers
+have finished. This gives extremely cheap, wait-free reads at the cost of more expensive,
+deferred updates. C++26 adds `std::rcu`.
 
 #### Q184
 
@@ -2182,7 +2185,7 @@ imply the state is unchanged.
 
 #### Q186
 
-**How tagged pointers help with lock-free structures?**
+**How can tagged pointers help with lock-free structures?**
 
 A tagged pointer packs a monotonically increasing version counter alongside the pointer
 (in unused low bits of an aligned pointer, or in a double-width CAS). Each successful
@@ -2195,7 +2198,7 @@ stale CAS fails, defeating ABA. This turns the compare-and-exchange into compari
 **What is pointer alignment, and why can it matter for tagged pointers?**
 
 Alignment is the requirement that an object's address be a multiple of some power of two;
-heap/aligned allocations of objects with alignment N guarantee the low 10g2 (N) bits of
+heap/aligned allocations of objects with alignment N guarantee the low `log2(N)` bits of
 their addresses are zero. Those guaranteed-zero low bits can be repurposed to store a
 small tag/version, letting you pack pointer + tag into a single word for a single-word
 CAS. This only works because alignment makes those bits reliably unused; misaligned or
@@ -2206,9 +2209,9 @@ under-aligned objects would corrupt the pointer when you mask the tag back off.
 **Why can memory reclamation dominate lock-free data-structure performance?**
 
 The core operations (CAS on a pointer) are cheap, but safe reclamation adds per-access
-bookkeeping: publishing hazard pointers, scanning other threads® hazard arrays,
+bookkeeping: publishing hazard pointers, scanning other threads' hazard arrays,
 maintaining epoch/limbo lists, or reference counting, often with fences on the hot path.
-Hazard-pointer scans are (threads x retired), and reclamation can touch many remote cache
+Hazard-pointer scans are O(threads x retired), and reclamation can touch many remote cache
 lines, so under high thread counts the reclamation machinery can cost more than the
 structural operation itself. This is why "lock-free" structures are frequently bounded by
 their reclamation scheme, not their CAS.
@@ -2231,7 +2234,7 @@ tests is weak evidence; reasoning matters.
 
 Establish two things: *safety* (linearizability, usually by identifying a linearization
 point for each operation and showing the concurrent history is equivalent to a legal
-sequential one) and *Liveness* (the lock-free progress property, that some operation
+sequential one) and *liveness* (the lock-free progress property, that some operation
 always completes in bounded steps). You verify memory-ordering correctness against the C++
 memory model's happens-before relations, and typically back the hand proof with a model
 checker that exhaustively explores interleavings and relaxed-memory executions.
@@ -2263,7 +2266,7 @@ linearization point for every operation is the usual way to prove linearizabilit
 **What is progress compared with correctness?**
 
 Correctness (safety) is about the results being right, e.g. linearizability: operations
-behave as if executed atomically in a legal order. Progress (11veness) is about operations
+behave as if executed atomically in a legal order. Progress (liveness) is about operations
 actually *completing*, characterized by guarantees like wait-free, lock-free, or
 obstruction-free. They are orthogonal: an algorithm can be correct but deadlock (no
 progress), or make progress but produce wrong results. A good lock-free design must
@@ -2277,7 +2280,7 @@ Lock-free code is extraordinarily hard to get right (memory ordering, ABA, recla
 and its bugs are rare and non-reproducible, so you want to confine that risk to a tiny,
 auditable surface rather than spread subtle atomics throughout the codebase. A narrow
 interface (push/pop, enqueue/dequeue) lets you exhaustively test and model-check that
-unit, swap the implementation (even for a mutex-based one without touching callers, and
+unit, swap the implementation (even for a mutex-based one) without touching callers, and
 keep the dangerous reasoning in one place. Encapsulation turns a global hazard into a
 single reviewable component.
 
@@ -2309,7 +2312,7 @@ you mean mutual exclusion.
 
 #### Q197
 
-**what is `std::binary_semaphore`?**
+**What is `std::binary_semaphore`?**
 
 It is an alias for `std::counting_semaphore<1>`, a semaphore whose counter is at most one.
 It is the idiomatic C++20 primitive for one-shot or repeated thread-to-thread signalling,
@@ -2322,7 +2325,7 @@ acquire and release can happen on different threads, unlike a mutex.
 
 Prefer a semaphore when the thing you are tracking is a count of permits or available
 units and there is no complex predicate over shared state, for example limiting
-concurrency to Nor a simple producer-wakes-consumer handoff. The semaphore needs no
+concurrency to N or a simple producer-wakes-consumer handoff. The semaphore needs no
 external mutex and cannot suffer a lost wakeup, since `release` persists the permit even
 if no one is currently waiting. Use a condition variable when waiters must evaluate an
 arbitrary predicate over mutex-protected state, or when you need `notify_all` broadcast
@@ -2333,8 +2336,8 @@ semantics.
 **What is `std::latch`?**
 
 `std::latch` is a single-use downward counter initialized to a count. Threads call
-`count_down()` (optionally by more than one) and wait) blocks until the counter reaches
-zero; `arrive_and wait()` combines the two, and try wait()" tests without blocking. It is
+`count_down()` (optionally by more than one) and `wait()` blocks until the counter reaches
+zero; `arrive_and_wait()` combines the two, and `try_wait()` tests without blocking. It is
 ideal for fan-out/fan-in or a one-time "all workers ready" gate. Once it reaches zero it
 cannot be reset or reused.
 
@@ -2342,18 +2345,18 @@ cannot be reset or reused.
 
 **How is a latch different from a barrier?**
 
-A latch is single-use: it counts down to zero once and is then exhausted, A barrier is
+A latch is single-use: it counts down to zero once and is then exhausted. A barrier is
 reusable across multiple phases; after all participating threads arrive, the barrier
 resets for the next phase and can optionally run a completion function once per phase. Use
 a latch for a one-time synchronization point and a barrier for repeated loop-step
 synchronization among a fixed group of threads.
 
-##### Q201
+#### Q201
 
 **What is `std::barrier`?**
 
 `std::barrier` is a reusable synchronization point for a fixed number of participating
-threads across repeated phases. Each thread calls `arrive_and_wait()` (on `arrive()` then
+threads across repeated phases. Each thread calls `arrive_and_wait()` (or `arrive()` then
 `wait()`); when the expected count of arrivals is reached, the barrier runs the optional
 completion function exactly once and then releases all waiters and advances to the next
 phase. `arrive_and_drop()` lets a thread leave the participant set, decrementing the
@@ -2380,9 +2383,9 @@ buffers without additional locking. It must not throw (a throw calls `std::termi
 
 #### Q204
 
-**What is `std::atomic_wait()`**
+**What is `std::atomic_wait()`?**
 
-`atomic.wait(old)` (and the free function `std::atomic_wait()` blocks the calling thread
+`atomic.wait(old)` (and the free function `std::atomic_wait`) blocks the calling thread
 while the atomic's value still equals `old`, waking when the value changes and a notify is
 issued. It gives you an efficient block-until-changed primitive directly on an atomic
 without a separate mutex and condition variable. It still must be used in a loop because,
@@ -2390,6 +2393,7 @@ like a condition variable, it may return spuriously and the value may have chang
 changed back.
 
 #### Q205
+
 **How does `atomic_wait()` differ from repeatedly polling an atomic?**
 
 A spin/poll loop keeps the CPU busy burning cycles and energy and competing for the cache
@@ -2401,13 +2405,13 @@ of blocking dominates.
 
 #### Q206
 
-**what are `atomic_notify_one()` and `atomic_notify_all()`?**
+**What are `atomic_notify_one()` and `atomic_notify_all()`?**
 
 They are the wake side of the C++20 atomic wait/notify protocol, available as member
 functions `atomic.notify_one()`/`notify_all()` and as free functions
 `std::atomic_notify_one`/`std::atomic_notify_all`. After a thread modifies the atomic it
-calls notify to wake one or all threads blocked in wait() on that object. `notify_one`
-releases a single waiter, "notify_all releases every waiter; a notify with no waiters is
+calls notify to wake one or all threads blocked in `wait()` on that object. `notify_one`
+releases a single waiter, `notify_all` releases every waiter; a notify with no waiters is
 simply a no-op.
 
 #### Q207
@@ -2416,8 +2420,8 @@ simply a no-op.
 
 When the shared state is a single atomic and no additional mutex-protected invariant is
 involved, `atomic.wait/notify` avoids the mutex acquire/release that a condition variable
-requires on both the wait and the signal path, reducing overhead and contention. It is
-a natural fit for a one-word flag or counter where the predicate is simply "value changed."
+requires on both the wait and the signal path, reducing overhead and contention. It is a
+natural fit for a one-word flag or counter where the predicate is simply "value changed."
 A condition variable remains preferable when waiters must evaluate a predicate over
 several variables that need a lock held consistently.
 
@@ -2425,7 +2429,7 @@ several variables that need a lock held consistently.
 
 **What are the synchronization risks when mixing atomic waits and ordinary mutexes?**
 
-If a predicate depends both on an atomic (waited via `atomic.wait`) and on other state
+If a predicate depends both on an atomic (waited via `atomic_wait`) and on other state
 guarded by a mutex, you can get lost wakeups or torn views: the notifier might change the
 mutex-protected data and the atomic in an order that lets a waiter miss the signal or read
 an inconsistent combination. The atomic wait only synchronizes on the atomic's value, not
@@ -2439,8 +2443,8 @@ splitting it across an atomic wait and a lock.
 **How can `std::stop_token` be used to cancel blocking work?**
 
 A `std::stop_token` (from a `std::jthread` or a `std::stop_source`) lets a worker check
-`stop_requested()` in its loop and return early, For blocking waits,
-`std::condition_variable_any::wait` has overloads taking a stop_token and predicate that
+`stop_requested()` in its loop and return early. For blocking waits,
+`std::condition_variable_any::wait` has overloads taking a `stop_token` and predicate that
 return when a stop is requested, and you can register a `std::stop_callback` to wake a
 custom wait (for example to call `notify_all`, close a socket, or release a semaphore).
 This turns an otherwise indefinite block into cooperative, interruptible cancellation
@@ -2462,7 +2466,7 @@ control-flow mechanism, not a threading mechanism.
 
 **What is the difference between a coroutine and a thread?**
 
-A thread is an 0S-scheduled unit of execution with its own stack, preemptively scheduled
+A thread is an OS-scheduled unit of execution with its own stack, preemptively scheduled
 by the kernel and able to run truly in parallel on another core. A coroutine is
 cooperative: it has a heap-allocated frame rather than a full stack, suspends only at
 explicit `co_await`/`co_yield`/`co_return` points, and resumes on whichever thread drives
@@ -2486,8 +2490,8 @@ to do with the `std::coroutine_handle`; later something calls `handle.resume()` 
 
 It is the component that decides where and when coroutines (or tasks) run, typically
 owning one or more threads and a work queue onto which ready coroutine handles are posted
-and then resumed. `co_await` -ing a scheduler is the idiom for "reschedule my continuation
-onto this executor, "which is how work is moved onto a thread pool or an I/O thread. The
+and then resumed. `co_await`-ing a scheduler is the idiom for "reschedule my continuation
+onto this executor," which is how work is moved onto a thread pool or an I/O thread. The
 executor is what actually turns suspendable coroutines into a concurrent system.
 
 #### Q214
@@ -2516,13 +2520,13 @@ the coroutine frame.
 
 #### Q216
 
-**why does a coroutine frame require careful ownership management?**
+**Why does a coroutine frame require careful ownership management?**
 
 The frame is heap-allocated and holds the coroutine's state, locals, and promise; it is
 only freed when something calls `handle.destroy()` (or final suspension transfers
 ownership appropriately). If no owner destroys it you leak the frame; if two owners
 destroy it you get a double free, and resuming or destroying a completed/already-destroyed
-handle is undefined behavior, RAII wrapper types (a task/awaitable that owns the handle
+handle is undefined behavior. RAII wrapper types (a task/awaitable that owns the handle
 and destroys it in its destructor, with clear move semantics) are used to make exactly-one
 ownership safe.
 
@@ -2558,6 +2562,7 @@ async flow, running on a thread pool executor that supplies the actual paralleli
 
 ```cpp
 int counter = 0;
+
 void worker() {
     ++counter;
 }
@@ -2568,7 +2573,7 @@ concurrently these accesses are unsynchronized, which is a data race and therefo
 undefined behavior, not merely a lost-update problem. The fix is to make the operation
 atomic (or guard it with a mutex). An atomic counter is the cheaper choice:
 
-``` cpp
+```cpp
 #include <atomic>
 
 std::atomic<int> counter{0};
@@ -2604,7 +2609,7 @@ void consumer() {
 ```
 
 Both `ready` and `value` are ordinary non-atomic variables accessed concurrently, so this
-is a data race and undefined behavior, Even on hardware that "looks" fine there are three
+is a data race and undefined behavior. Even on hardware that "looks" fine there are three
 distinct problems: visibility (the consumer may never observe `ready` becoming true
 because the compiler can hoist the load out of the loop), ordering (the compiler or CPU
 may reorder the two producer stores, so `ready` becomes visible before `value`), and the
@@ -2616,7 +2621,7 @@ load so that `value = 42` is guaranteed visible once `ready` reads true:
 
 void use(int);
 
-std:: atomic<bool> ready{false};
+std::atomic<bool> ready{false};
 int value = 0;   // now safely published through the release/acquire
 
 void producer() {
@@ -2624,11 +2629,11 @@ void producer() {
     ready.store(true, std::memory_order_release);
 }
 
-void consumer (){
+void consumer () {
     while (!ready.load(std::memory_order_acquire)) {
 
     }
-    Use (value);
+    Use(value);
 }
 ```
 
@@ -2662,31 +2667,31 @@ other. The fix is a consistent global lock order: every thread must acquire the 
 the same order.
 
 ```cpp
-void task a() {
+void task_a() {
     std::lock_guard lockd(first);
     std::lock_guard lock2(second);
 }
-void task b() {
+void task_b() {
     std::lock_guard lock(first);
-    std::lock_guard lock2(second);     //same order as task a
+    std::lock_guard lock2(second);    //same order as task a
 }
 ```
 
 Equivalently, acquire both at once with `std::scoped_lock(first, second)`, which applies a
 deadlock-avoidance algorithm (see C4).
 
-##### C4
+#### C4
 
 **Question 4: safe locking of multiple mutexes**
 
 ```cpp
-std:: scoped_lock lock(first, second);
+std::scoped_lock lock(first, second);
 ```
 
 `std::scoped_lock` with multiple mutexes locks them all using a deadlock-avoidance
 algorithm equivalent to `std::lock`, which uses a try-and-back-off strategy so the
 acquisition order you write does not matter. Both `task_a` and `task_b` can therefore
-write `std::scoped lock lock(first, second)` and `std::scoped_lock lock(second, first)`
+write `std::scoped_lock lock(first, second)` and `std::scoped_lock lock(second, first)`
 respectively and still never deadlock, because the primitive, not the source order,
 decides how the locks are taken. It is also RAII, unlocking all mutexes on scope exit, and
 is the modern replacement for manually calling `std::lock` followed by adopting lock
@@ -2719,7 +2724,7 @@ void consumer() {
 There are two defects. First, `cv.wait(lock)` has no predicate, so it is vulnerable to a
 spurious wakeup (the standard explicitly permits `wait` to return without a notification)
 and the code would then proceed with `ready` still false. Second, it has a lost-wakeup
-race: if the producer sets `ready` and calls `notify_one before the consumer reaches
+race: if the producer sets `ready` and calls `notify_one` before the consumer reaches
 `wait`, the notification is missed and the consumer blocks forever. Both are fixed by the
 predicate overload, which re-checks the condition in a loop and also handles the
 already-ready case before ever waiting:
@@ -2728,7 +2733,7 @@ already-ready case before ever waiting:
 void consumer() {
     std::unique_lock lock(mutex);
     cv.wait(lock, [&]{ return ready; });
-    consume ();
+    consume();
 }
 ```
 
@@ -2741,7 +2746,7 @@ std::thread create_worker() {
     int value = 10;
 
     return std::thread([&] {
-        use (value);
+        use(value);
     });
 }
 ```
@@ -2753,10 +2758,10 @@ dangling reference and undefined behavior. The fix is to capture by value (or ot
 give the worker its own copy / shared owned storage):
 
 ```cpp
-std:: thread create worker) {
+std::thread create_worker() {
     int value = 10;
-    return std::thread([value] {// own copy lives in thread
-        use (value);
+    return std::thread([value] {   // own copy lives in thread
+        use(value);
     });
 }
 ```
@@ -2777,15 +2782,15 @@ For a pure counter this is sufficient: `fetch_add` is an atomic read-modify-writ
 any number of threads using `relaxed` no increment is lost and the final total is exact;
 relaxed still guarantees atomicity, it only drops ordering with respect to other
 variables. Reading the final value is safe after you have joined the threads (the join
-provides the happens-before, and even an inter-thread read is fine as long as you do not
-rely on the counter to order other data. It is not* sufficient for publishing related
+provides the happens-before), and even an inter-thread read is fine as long as you do not
+rely on the counter to order other data. It is *not* sufficient for publishing related
 non-atomic data: relaxed establishes no happens-before, so another thread observing the
 new count has no guarantee of seeing the associated writes. For publishing you need
-release on the store and acquire on the load (or `aca_rel`).
+release on the store and acquire on the load (or `acq_rel`).
 
 #### C8
 
-**Question 8; vector and concurrent access**
+**Question 8: vector and concurrent access**
 
 ```cpp
 std::vector<int> values;
@@ -2796,10 +2801,11 @@ void producer() {
 
 void consumer() {
     if (!values.empty()) {
-        process (values.front());
+        process(values.front());
     }
 }
 ```
+
 `std::vector` is not thread-safe for concurrent write/read: `push_back` can reallocate and
 move the buffer, so a concurrent `empty()`/`front()` can read a stale or freed pointer, a
 data race and undefined behavior. The whole producer operation and the whole consumer
@@ -2811,7 +2817,7 @@ them:
 #include <mutex>
 #include <vector>
 
-void process (int);
+void process(int);
 
 std::mutex m;
 std::vector<int> values;
@@ -2823,7 +2829,7 @@ void producer() {
 
 void consumer() {
     std::lock_guard lock(m);
-    if (!values empty()) {
+    if (!values.empty()) {
         process(values.front());
     }
 }
@@ -2831,7 +2837,6 @@ void consumer() {
 
 If `process` is expensive, copy the element out under the lock and release the mutex
 before calling `process`.
-
 
 #### C9
 
@@ -2848,7 +2853,7 @@ under the lock and broadcasts so every blocked worker re-evaluates the predicate
 #include <functional>
 
 std::mutex m;
-std::condition variable cv;
+std::condition_variable cv;
 std::queue<std::function<void()>> queue;
 bool stopped = false;
 
@@ -2857,14 +2862,14 @@ void worker() {
         std::function<void()> task;
         {
             std::unique_lock lock(m);
-            cv.wait(lock, [&] { return stopped || !queue. empty(); });
-            if (stopped && queue.empty ()) {
-                return;                        // only exit once fully drained
+            cv.wait(lock, [&]{ return stopped || !queue.empty(); });
+            if (stopped && queue.empty()) {
+                return;                       // only exit once fully drained
             }
             task = std::move(queue.front());
             queue.pop();
         }
-        task();                                // run work outside the lock
+        task();                               // run work outside the lock
     }
 }
 
@@ -2873,7 +2878,7 @@ void shutdown() {
         std::lock_guard lock(m);
         stopped = true;
     }
-    cv.notify_all();                           // wake all workers to re-check
+    cv.notify_all();                          // wake all workers to re-check
 }
 ```
 
@@ -2890,11 +2895,11 @@ shutdown ensures no worker is left blocked.
 int atomic_increment(std::atomic<int>& value) {
     int expected = value.load(std::memory_order_relaxed);
     while (!value.compare_exchange_weak(
-              expected,                // expected: current snapshot
-              expected + 1,            // desired: snapshot + 1
-              std::memory_order_aca_rel, // success ordering
+              expected,              // expected: current snapshot
+              expected + 1,          // desired: snapshot + 1
+              std::memory_order_aca_rel,   // success ordering
               std::memory_order_relaxed)) {// failure ordering
-        // On failure, compare_exchangeweak reloads "expected"
+        // On failure, compare_exchange_weak reloads `expected`
         // with the actual current value, so we retry with a fresh snapshot.
     }
     return expected + 1;
@@ -2905,12 +2910,12 @@ The *expected* value is a snapshot of the current contents; the *desired/update*
 that snapshot plus one. We use the *weak* form because it may fail spuriously (report a
 mismatch even when the values matched, cheaper on LL/SC architectures), which is harmless
 inside a retry loop; the *strong* form is preferred only when there is no loop and a
-spurious failure would be costly. The failure* memory order must be no stronger than the
+spurious failure would be costly. The *failure* memory order must be no stronger than the
 success order and must not be a release order (a failed CAS performs no store to release);
 `relaxed` on failure is correct because the retry simply re-reads, while `acq_rel` on
 success both acquires the prior writes and releases this update. For a plain counter
 `fetch_add(1)` is simpler and faster; the CAS loop is the pattern when the new value is a
-function of the old that no single RMN instruction provides.
+function of the old that no single RMW instruction provides.
 
 ## Design and discussion questions
 
@@ -2921,7 +2926,7 @@ function of the old that no single RMN instruction provides.
 - Internal `std::queue`/`std::deque` guarded by one `std::mutex`, plus a
   `std::condition_variable` for "not empty" (and a second for "not full" if bounded).
 - `push`: lock, (if bounded) wait on not-full, enqueue, unlock, `notify_one` on not-empty.
-- `pop`: lock, `cv.wait(lock, [&] { return stopped || !q.empty(); })`, move the front out,
+- `pop`: lock, `cv.wait(lock, [&]{ return stopped || !q.empty(); })`, move the front out,
   unlock, return (use `std::optional`/status to signal shutdown).
 - Shutdown: a `stopped` flag set under the lock plus `notify_all`, with pop returning
   empty once drained.
@@ -2935,7 +2940,7 @@ function of the old that no single RMN instruction provides.
 - Fixed-capacity array of packet slots; one `head` (consumer) and one `tail` (producer)
   atomic index.
 - Exactly one producer and one consumer means no CAS is needed: producer writes the slot
-  then `tail.store(release)`; consumer `tail.load(acquire)` reads the slot, then
+  then `tail.store(release)`; consumer `tail.load(acquire)`, reads the slot, then
   `head.store(release)`.
 - Full/empty distinguished by keeping one slot open or using monotonically increasing
   indices masked to capacity (power-of-two size for cheap masking).
@@ -2957,8 +2962,8 @@ function of the old that no single RMN instruction provides.
   the slot.
 - Cache-line-pad the enqueue and dequeue counters separately to cut false sharing.
 - Trade-off: lock-free scales under contention but is much harder to get right and to
-  reclaim/version correctly; start with the mutex version and only move
-  to lock-free with benchmarks justifying it.
+  reclaim/version correctly; start with the mutex version and only move to lock-free with
+  benchmarks justifying it.
 
 #### Q222
 
@@ -2966,7 +2971,7 @@ function of the old that no single RMN instruction provides.
 
 - A single atomic/flagged `stopped` state (or a `std::stop_source`) set once under the
   relevant lock.
-- Wake every blocked worker with `notify_all` (or stop callacks) so none waits forever.
+- Wake every blocked worker with `notify_all` (or stop callbacks) so none waits forever.
 - Define a drain policy: process remaining queued work before exit, or discard it; workers
   exit only when `stopped && queue.empty()` for graceful drain.
 - `join()` all workers (use `std::jthread` so joining and stop-request happen
@@ -2978,7 +2983,7 @@ function of the old that no single RMN instruction provides.
 
 **Design a per-thread statistics system that periodically aggregates counters.**
 
-- Give each worker its own counter block, cache-11ne aligned (`alignas(64)`) to avoid
+- Give each worker its own counter block, cache-line aligned (`alignas(64)`) to avoid
   false sharing; workers update their own block with cheap relaxed atomics or even plain
   writes if only the owner writes.
 - Register each block in a global list (guarded once at thread start) so an aggregator can
@@ -2994,13 +2999,13 @@ function of the old that no single RMN instruction provides.
 
 **Design a concurrent cache with bounded memory.**
 
-- Sharded map: partition keys across shards each with its own mutex (or a reader-writer
+- Sharded map: partition keys across N shards each with its own mutex (or a reader-writer
   lock) to spread contention.
 - Eviction policy (LRU/LFU/TTL) maintained per shard so bookkeeping stays local; a bounded
   size per shard caps total memory.
 - Reads take the shard lock briefly (or a shared lock); writes/insertions update the
   recency structure and evict when over budget.
-- Trade-off: sharding trades perfect global LU accuracy for scalability; a reader-writer
+- Trade-off: sharding trades perfect global LRU accuracy for scalability; a reader-writer
   lock helps read-heavy loads but can starve writers, so choose based on the measured
   read/write ratio.
 
@@ -3038,8 +3043,8 @@ function of the old that no single RMN instruction provides.
   pipelines, bounded producers).
 - Dropping/overwriting: when freshness matters more than completeness and latency must
   stay bounded (telemetry, media, packet forwarding).
-- Batching: when per-item overhead dominates; amortize syscalls/locking at the cost of
-  a little latency.
+- Batching: when per-item overhead dominates; amortize syscalls/locking at the cost of a
+  little latency.
 - Backpressure: when you can propagate slowness upstream to a controllable source (TCP
   flow control, credit-based schemes).
 - The decision follows the correctness and latency contract of the system, not a universal
@@ -3061,7 +3066,7 @@ function of the old that no single RMN instruction provides.
 **How would you test a concurrent data structure under heavy contention?**
 
 - Stress tests with many more threads than cores, randomized operation mixes, and long run
-  times to expose interleavings,
+  times to expose interleavings.
 - Run under ThreadSanitizer to catch data races and under AddressSanitizer for memory
   errors; use Helgrind for lock-order issues.
 - Verify correctness with invariants and a linearizability checker comparing observed
@@ -3101,7 +3106,7 @@ function of the old that no single RMN instruction provides.
   isolated cores, warm-up runs discarded.
 - Vary producer/consumer counts and item sizes; measure a realistic operation mix, not
   just one thread.
-- Report distribution, not just mean: throughput plus p58/p99/p99.9 latency, and run long
+- Report distribution, not just mean: throughput plus p50/p99/p99.9 latency, and run long
   enough to reach steady state.
 - Avoid pitfalls: dead-code elimination of results, allocation noise, coordinated omission
   in latency measurement; repeat runs and report variance.
@@ -3129,15 +3134,15 @@ function of the old that no single RMN instruction provides.
 - The compiler may optimize away unused results, and pinning/affinity choices can make one
   design look artificially good.
 
-#### 235
+#### Q235
 
 **How would you distinguish lock contention from cache contention?**
 
 - Lock contention shows up as time blocked on mutexes and elevated context switches;
-  profilers and `perf lock`/ futex wait times point to it, and it eases when you shrink
+  profilers and `perf lock` / futex wait times point to it, and it eases when you shrink
   the critical section or shard the lock.
-- Cache contention (including false sharing) shows high cache-miss / HIT counters and
-  cross-core coherence traffic while CUs stay busy spinning rather than blocked, often
+- Cache contention (including false sharing) shows high cache-miss / HITM counters and
+  cross-core coherence traffic while CPUs stay busy spinning rather than blocked, often
   with little mutex wait time.
 - Diagnostic: if removing the lock (or going lock-free) does not help but
   cache-aligning/padding the hot fields does, it was cache contention; if lock wait time
@@ -3147,14 +3152,14 @@ function of the old that no single RMN instruction provides.
 
 #### Q236
 
-**Explain the difference between a mutex, semaphore, condition varlable, latch, and
+**Explain the difference between a mutex, semaphore, condition variable, latch, and
 barrier.**
 
-- Mutex; owned mutual-exclusion lock; the locker must unlock; protects a critical section.
-- Semaphore (counting_semaphore*/ binary_semaphore*): ownerless permit counter for
+- Mutex: owned mutual-exclusion lock; the locker must unlock; protects a critical section.
+- Semaphore (`counting_semaphore`/`binary_semaphore`): ownerless permit counter for
   limiting concurrency or signalling; any thread may release.
 - Condition variable: used with a mutex to block until a predicate over shared state
-  becomes true; needs a predicate loop to handle spurlous and lost wakeups.
+  becomes true; needs a predicate loop to handle spurious and lost wakeups.
 - Latch (`std::latch`): single-use countdown to a one-time rendezvous; not reusable.
 - Barrier (`std::barrier`): reusable phase synchronization for a fixed thread group, with
   an optional completion function run exactly once per phase.
@@ -3177,10 +3182,10 @@ payload = 42;
 ready.store(true, std::memory_order_release);
 // consumer
 while (!ready.load(std::memory_order_acquire)) {}
-use(payLoad);   // guaranteed to observe 42
+use(payload);   // guaranteed to observe 42
 ```
 
-Acquire-release is cheaper than `sea_cst` because it orders only this pairing, not a
+Acquire-release is cheaper than `seq_cst` because it orders only this pairing, not a
 single total order across all atomics.
 
 #### Q238
@@ -3190,7 +3195,7 @@ single total order across all atomics.
 `volatile` only tells the compiler not to elide or reorder accesses to that object
 relative to other volatile accesses; it was designed for memory-mapped I/O, not threads.
 It provides no atomicity (a `volatile` read-modify-write can still tear), no inter-thread
-ordering/visibility guarantees, and does not restrain CUreordering or insert fences.
+ordering/visibility guarantees, and does not restrain CPU reordering or insert fences.
 `std::atomic` guarantees indivisible operations and a defined memory-ordering model
 (acquire/release/seq_cst) that establishes happens-before between threads. So concurrent
 access via `volatile` is still a data race and undefined behavior.
@@ -3199,7 +3204,9 @@ access via `volatile` is still a data race and undefined behavior.
 
 **Describe a deadlock and at least three ways to prevent it.**
 
-A deadlock is a cycle of threads each holding a resource and waiting for one another, so none can proceed (the four Coffman conditions: mutual exclusion, hold-and-wait, no preemption, circular wait). Prevention:
+A deadlock is a cycle of threads each holding a resource and waiting for one another, so
+none can proceed (the four Coffman conditions: mutual exclusion, hold-and-wait, no
+preemption, circular wait). Prevention:
 
 - Impose a global lock ordering so all threads acquire mutexes in the same order (breaks
   circular wait).
@@ -3230,7 +3237,7 @@ A deadlock is a cycle of threads each holding a resource and waiting for one ano
 **Explain false sharing and how it affects atomic counters.**
 
 False sharing happens when two logically independent variables sit on the same cache line,
-so a write by one core invalidates the whole line in other cores caches even though they
+so a write by one core invalidates the whole line in other cores' caches even though they
 touch a different variable. With per-thread atomic counters packed together, each
 increment ping-pongs the shared line between cores via the coherence protocol, turning
 what should be contention-free updates into serialized, high-latency traffic. The fix is
@@ -3249,7 +3256,7 @@ independent, scalable updates at the cost of extra memory.
   and consumers do not false-share each other's index.
 - Memory ordering: acquire when loading a slot's sequence, release when publishing it;
   relaxed on failed-CAS retries.
-- Backpressure via the bounded size (full-> block/drop/reject by policy); keep per-slot
+- Backpressure via the bounded size (full -> block/drop/reject by policy); keep per-slot
   data compact but avoid packing unrelated hot fields onto one line.
 
 #### Q243
@@ -3288,11 +3295,11 @@ sections are tiny. So lock-free is not automatically faster; measure before choo
 
 - Worker ownership: shard by flow/RX queue so each worker core owns a set of connections
   and touches only its own state (shared-nothing), ideally pinned to cores (RSS/affinity).
-- Queue structure: per-core bounded SPS/MPSC ring buffers between RX, workers, and TX;
+- Queue structure: per-core bounded SPSC/MPSC ring buffers between RX, workers, and TX;
   power-of-two size, preallocated, no per-packet allocation.
 - Backpressure: bounded queues with a drop/overwrite policy because latency beats
   completeness for packets; shed load early and count drops.
-- Shutdown: a `stop_source` /flag plus `notify_all`, drain or discard per policy, then join
+- Shutdown: a `stop_source`/flag plus `notify_all`, drain or discard per policy, then join
   all workers (`std::jthread`).
 - Per-thread statistics: cache-line-aligned per-worker counters updated with relaxed
   atomics, aggregated periodically by a monitor thread.
@@ -3303,4 +3310,5 @@ sections are tiny. So lock-free is not automatically faster; measure before choo
 - Error handling: never let one bad packet/worker crash the pipeline; isolate failures per
   shard, log and drop malformed input.
 - Benchmarking and race detection: steady-state throughput and p99/p99.9 latency with
-  coordinated-omission-aware measurement, pinned cores, and validation under ThreadSanitizer.
+  coordinated-omission-aware measurement, pinned cores, and validation under
+  ThreadSanitizer.

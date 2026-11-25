@@ -2,8 +2,8 @@
 
 # C++ class and object interview answers
 
-Answers to the numbered questions in [cpp_class_interview.md](cpp class interview.nd)
-(`Q1`- `Q84`). The code-based questions already have answers in that file. Link to an
+Answers to the numbered questions in [`cpp_class_interview.md`](cpp class interview.nd)
+(`Q1`-`Q84`). The code-based questions already have answers in that file. Link to an
 answer by its anchor, for example `#q1`.
 
 Try the questions first, then compare.
@@ -24,8 +24,8 @@ no storage (ignoring its static members).
 **What is the difference between `class` and `struct` in C++?**
 
 The only language-level difference is the default access and default inheritance: members
-and base classes are `private` by default in a class" and `public` by default in a
-`struct` Everything else (virtual functions, constructors, templates, etc.) is identical.
+and base classes are `private` by default in a `class` and `public` by default in a
+`struct`. Everything else (virtual functions, constructors, templates, etc.) is identical.
 By convention `struct` is used for passive aggregates and `class` for types with
 invariants, but that is style, not a rule.
 
@@ -48,18 +48,19 @@ not once per object.
 
 #### Q5
 
-**Can a class be empty? What is the typical size of an empty class, and why? (See Question 8 below.)**
+**Can a class be empty? What is the typical size of an empty class, and why? (See Question
+8 below.)**
 
 Yes. An empty class has `sizeof` of at least 1 (typically exactly 1) so that every
 complete object has a distinct address and arrays work correctly: if the size were 0, two
 array elements would share an address. As a base class the empty-base optimization (EBO)
-or `[[no_unique address]]` on an empty member can make it contribute 0 bytes.
+or `[[no_unique_address]]` on an empty member can make it contribute 0 bytes.
 
 #### Q6
 
 **Can an object be created without explicitly defining a constructor?**
 
-Yes, If you declare no constructors, the compiler implicitly declares a default
+Yes. If you declare no constructors, the compiler implicitly declares a default
 constructor (and it is defined/usable when its members and bases are
 default-constructible). Aggregates can also be created with aggregate initialization. Note
 that declaring any other constructor suppresses the implicit default constructor.
@@ -70,14 +71,14 @@ that declaring any other constructor suppresses the implicit default constructor
 function?**
 
 A declaration (usually inside the class, in a header) introduces the name and signature; a
-definition provides the body, A function defined inside the class body is implicitly
+definition provides the body. A function defined inside the class body is implicitly
 `inline`; one declared in the class and defined out of line (`void C::f() {}`) is not
-inline unless marked so, The one-definition rule allows many declarations but essentially
+inline unless marked so. The one-definition rule allows many declarations but essentially
 one definition.
 
 #### Q8
 
-**what is the purpose of the `this` pointer?**
+**What is the purpose of the `this` pointer?**
 
 `this` is an implicit parameter in every non-static member function that points to the
 object the function was invoked on, letting the function access that object's members and
@@ -88,10 +89,10 @@ pointer-to-const. It enables member chaining via `return *this;`.
 
 **Can `this` be null inside a non-static member function?**
 
-No, not in a valid program. Calling a non-static member function through a null pointer
-is undefined behavior, so by the time control enters the function the standard assumes `this`
+No, not in a valid program. Calling a non-static member function through a null pointer is
+undefined behavior, so by the time control enters the function the standard assumes `this`
 is non-null. Code that "checks `if (this == nullptr)`" is relying on UB and modern
-compilers may optimize the check away. *Red flag:* a candidate who says null- `this` checks
+compilers may optimize the check away. *Red flag:* a candidate who says null-`this` checks
 are a legitimate technique.
 
 #### Q10
@@ -109,6 +110,7 @@ are accessed as `Class::member` and are not counted in `sizeof` of an object.
 #### Q11
 
 **What is a constructor? Can it return a value?**
+
 A constructor is a special member function that initializes an object during its
 construction, establishing the class invariant. It has no return type and cannot return a
 value (not even `void`); you also cannot take its address. It can be overloaded,
@@ -120,7 +122,7 @@ defaulted, deleted, `explicit`, or `constexpr`.
 
 A default constructor is one callable with no arguments, either taking no parameters or
 having defaults for all of them. The compiler generates one implicitly only if you declare
-no constructors at all; you can force one with `=default`. It is used for value/default
+no constructors at all; you can force one with `= default`. It is used for value/default
 initialization and is required by containers that default-construct elements.
 
 #### Q13
@@ -150,13 +152,13 @@ class Example {
     int second;
 public:
     Example()
-        : second (2), first(1) {}
+        : second(2), first(1) {}
 };
 ```
 
 Members are initialized in the order they are declared in the class, regardless of the
 order in the member-initializer list. Here `first` is initialized before `second` even
-though the list writes `second` first, Listing them out of declaration order is a common
+though the list writes `second` first. Listing them out of declaration order is a common
 source of `-Wreorder` warnings and subtle bugs when one member's initializer reads
 another.
 
@@ -165,8 +167,8 @@ another.
 **What is the difference between initialization and assignment?**
 
 Initialization gives an object its first value as it is created (member-initializer list,
-braces, or `= value` at the point of definition), Assignment replaces the value of an
-already-constructed object via `operator=`, For members, writing `x = v;` inside the
+braces, or `= value` at the point of definition). Assignment replaces the value of an
+already-constructed object via `operator=`. For members, writing `x = v;` inside the
 constructor body default-constructs `x` first and then assigns, whereas `: x(v)`
 initializes directly; the distinction matters for `const`, references, and
 expensive-to-construct types.
@@ -183,10 +185,10 @@ order to match the actual initialization order.
 
 #### Q17
 
-**What happens if a const data member is not included in the constructor's initializer
+**What happens if a `const` data member is not included in the constructor's initializer
 list?**
 
-A `const` (non-static, non-defaulted) member has no default value, so falling to
+A `const` (non-static, non-defaulted) member has no default value, so failing to
 initialize it is ill-formed: the program does not compile. If the member has an in-class
 default initializer or a default constructor, that is used; otherwise you must initialize
 it in the mem-init list.
@@ -213,6 +215,7 @@ still alive while it is torn down.
 #### Q20
 
 **Why should a base class destructor often be virtual?**
+
 So that `delete`ing a derived object through a base-class pointer invokes the correct
 (derived) destructor. If the base destructor is non-virtual and you delete a derived
 object via `Base*`, the behavior is undefined (typically only the base part is destroyed,
@@ -244,7 +247,7 @@ a factory function.
 
 Yes. A pure virtual destructor makes a class abstract while still being a destructor, but
 it must still have a definition, because every derived object's destruction chains into
-the base destructor, For example:
+the base destructor. For example:
 
 ```cpp
 struct Base {
@@ -290,12 +293,13 @@ like `std::vector` can use them during reallocation.
 If a class needs a user-defined destructor, copy constructor, or copy-assignment operator,
 it almost certainly needs all three, because that usually signals manual resource
 ownership. Defining only one leaves the others with incorrect compiler-generated (shallow)
-behavior. 
+behavior.
 
 #### Q28
 
 **What is the Rule of Five?**
-An extension of the Rule of Three for C+11: if you declare any of destructor, copy
+
+An extension of the Rule of Three for C++11: if you declare any of destructor, copy
 constructor, copy assignment, move constructor, or move assignment, consider declaring all
 five. Declaring a destructor or copy operation also suppresses or deprecates the implicit
 move operations, so you may silently lose moves if you do not provide them.
@@ -335,7 +339,7 @@ still participates in overload resolution, so it can intentionally block specifi
 class Buffer {
     char* data;
 public:
-    Buffer(std:: size_t size)
+    Buffer(std::size_t size)
         : data(new char[size]) {}
 
     ~Buffer () {
@@ -345,7 +349,7 @@ public:
 ```
 
 It owns a raw resource but violates the Rule of Three/Five: the implicitly generated copy
-constructor and copy assignment do a shallow copy, so two `Buffer`'s point at the same
+constructor and copy assignment do a shallow copy, so two `Buffer`s point at the same
 array and `delete[]` runs twice (double free). Copying or assigning a `Buffer` is
 therefore unsafe, and there are no move operations.
 
@@ -367,11 +371,11 @@ copies/moves/destruction are correct automatically.
 
 ```cpp
 class Buffer {
-    std::vector<char> data;      // or std: :unique_ptr<char[]>
+    std::vector<char> data;      // or std::unique_ptr<char[]>
  
 public:
     explicit Buffer(std::size_t size) : data(size) {}
- };
+};
 ```
 
 Alternatively, delete copying, or implement deep copy plus `noexcept` move operations
@@ -433,16 +437,16 @@ exceptions. Use `protected` if subclasses legitimately need access.
 A friend function is a non-member (or a function/class from elsewhere) that the class
 grants access to its `private` and `protected` members via a `friend` declaration.
 Friendship is granted by the class, is not inherited, and is not transitive. It is
-commonly used for symmetric operators like `operator<<` and `operator=`.
+commonly used for symmetric operators like `operator<<` and `operator==`.
 
 #### Q41
 
-**what are the advantages and disadvantages of using `friend`?**
+**What are the advantages and disadvantages of using `friend`?**
 
-Advantages: it enables natural non-member operators (e.g, stream insertion, symmetric
+Advantages: it enables natural non-member operators (e.g. stream insertion, symmetric
 binary operators) and tightly-coupled helper types to access internals without exposing
 them publicly. Disadvantages: it breaks encapsulation for the friended entity, couples
-code to the class's private layout, and can be abused instead of designing a proper
+that code to the class's private layout, and can be abused instead of designing a proper
 interface. Prefer the minimum friendship necessary.
 
 #### Q42
@@ -458,7 +462,7 @@ public:
 
 A `const` member function promises not to modify the observable state of the object;
 inside it `this` is a pointer to `const`, so non-`mutable` members cannot be changed and
-only other `const` member functions can be called on `this`. it can be called on both
+only other `const` member functions can be called on `this`. It can be called on both
 `const` and non-`const` objects, and is part of the function's signature for overloading.
 
 #### Q43
@@ -472,7 +476,7 @@ not the pointee. Casting away const to modify a genuinely const object is UB.
 
 #### Q44
 
-**What is "mutable" used for?**
+**What is `mutable` used for?**
 
 `mutable` lets a specific non-static data member be modified even inside a `const` member
 function or when the object is `const`. It is intended for members that do not affect the
@@ -488,8 +492,8 @@ void process();
 void process() const;
 ```
 
-They are two overloads distinguished by the constness of the implicit `this`.
-A non- `const` object prefers `process())`; a `const` object can only call the `const`
+They are two overloads distinguished by the constness of the implicit `this`. A
+non-`const` object prefers `process())`; a `const` object can only call the `const`
 overload. This pair is the standard way to provide, for example, both mutating and
 read-only accessors (like `begin()`/`begin() const`).
 
@@ -497,7 +501,7 @@ read-only accessors (like `begin()`/`begin() const`).
 
 **Can a static member function access non-static data members directly?**
 
-No. A static members function has no `this` pointer, so it has no object to apply a
+No. A static member function has no `this` pointer, so it has no object to apply a
 non-static member to; it can only touch non-static members through an object it is
 explicitly given (e.g. a parameter). It can freely access static data members and other
 static members.
@@ -507,18 +511,19 @@ static members.
 **Why does a static member function not have a `this` pointer?**
 
 Because it belongs to the class, not to any particular object, and can be called with just
-`Class::f()` without an instance, With no associated object there is nothing for `this` to
+`Class::f()` without an instance. With no associated object there is nothing for `this` to
 point to. This is also why static member functions cannot be `const`, `virtual`, or
 `volatile`.
 
 #### Q48
 
-**What is the difference between a member function defined inside and outside the class definition?**
+**What is the difference between a member function defined inside and outside the class
+definition?**
 
 A function defined inside the class body is implicitly `inline`, which allows its
 definition to appear in multiple translation units via the header. A function merely
 declared in the class and defined out of line (`ret Class::f() {...}`) is not inline by
-default and should normally be defined once in a `.cpp` file, Semantically they benave
+default and should normally be defined once in a `.cpp` file. Semantically they benave
 identically; the difference is linkage/inlining and where the body lives.
 
 ## Inheritance and polymorphism
@@ -548,13 +553,13 @@ and the ability to override virtuals.
 **What is runtime polymorphism?**
 
 It is choosing the function to call at run time based on the dynamic type of the object
- achieved via virtual functions called through a base pointer or reference. The same call
- expression (`p->draw()`) can invoke different derived overrides depending on what `p`
- actually points to. It trades a small indirection cost for extensibility.
+achieved via virtual functions called through a base pointer or reference. The same call
+expression (`p->draw()`) can invoke different derived overrides depending on what `p`
+actually points to. It trades a small indirection cost for extensibility.
 
 #### Q52
 
-**what is compile-time polymorphism?**
+**What is compile-time polymorphism?**
 
 It is selecting behavior at compile time, via function/operator overloading and templates
 (including CRTP). There is no runtime dispatch cost and types are resolved statically,
@@ -582,6 +587,7 @@ Derived classes remain abstract until they override all pure virtuals.
 #### Q55
 
 **What is an abstract class?**
+
 An abstract class is one that has at least one pure virtual function (directly or
 inherited and not overridden) and therefore cannot be instantiated on its own. It is used
 purely as an interface/base type; you can still have pointers and references to it and it
@@ -621,13 +627,13 @@ silently discards state, which is why passing polymorphic types by value is a bu
 
 Handle polymorphic objects through base-class pointers or references (including smart
 pointers) rather than by value, so the dynamic type is preserved. Pass parameters as
-`const Base&` or `Base*`, store` std::unique_ptr<Base>` in containers, and consider
+`const Base&` or `Base*`, store `std::unique_ptr<Base>` in containers, and consider
 disabling copying of the base or making it abstract. A virtual `clone()` is the right way
 to copy polymorphically.
 
 #### Q59
 
-**what is the difference between overriding and overloading?**
+**What is the difference between overriding and overloading?**
 
 Overloading is providing multiple functions with the same name but different parameter
 lists in the same scope, resolved at compile time by argument types. Overriding is a
@@ -641,7 +647,7 @@ overrides the base function.
 
 `override` tells the compiler that the function is intended to override a base-class
 virtual; if it does not actually match a base virtual (typo, wrong signature, missing
-`const()`), compilation fails. It documents intent and prevents silent "hiding" bugs. It has
+`const`), compilation fails. It documents intent and prevents silent "hiding" bugs. It has
 no runtime cost.
 
 #### Q61
@@ -660,37 +666,38 @@ Attempting to override/derive past `final` is a compile error.
 ```cpp
 class Base {
 public:
-    virtual void run():
+    virtual void run();
 };
 
 class Derived : public Base {
 public:
-    void run override;
+    void run() override;
 };
 
 Base* ptr = new Derived;
-ptr->run():
+ptr->run();
 ```
 
 Because `run` is virtual and the dynamic type is `Derived`, the call dispatches to
-`Derived::run()` through the table. The static type of `ptr` (`Base*`) only determines
+`Derived::run()` through the vtable. The static type of `ptr` (`Base*`) only determines
 what names are visible, not which override runs. (Note the code leaks the object and
-`Base` lacks a virtual destructor, so deleting through ptr would be UB.)
+`Base` lacks a virtual destructor, so deleting through `ptr` would be UB.)
 
 #### Q63
 
 **What is the difference between a virtual function and a pure virtual function?**
 
 A virtual function has an implementation in the base and may be overridden; the base is
-still instantiable. A pure virtual function (`= 0`)makes the class abstract and generally
+still instantiable. A pure virtual function (`= 0`) makes the class abstract and generally
 must be overridden by concrete derived classes, although it may optionally have a
 definition that overrides can call. In short: virtual = overridable with a default; pure
-virtual - required interface, class becomes abstract.
+virtual = required interface, class becomes abstract.
 
 #### Q64
 
 **What is the typical memory cost of adding virtual functions to a class?**
-Adding the first virtual function typically adds one table pointer per object (commonly 8
+
+Adding the first virtual function typically adds one vtable pointer per object (commonly 8
 bytes on 64-bit), regardless of how many virtual functions you add. There is also one
 shared vtable per class (not per object) in static storage. Per call there is an extra
 indirection and it inhibits inlining unless the compiler can devirtualize.
@@ -699,18 +706,19 @@ indirection and it inhibits inlining unless the compiler can devirtualize.
 
 **What is a vtable and what is a vptr?**
 
-A table (virtual table) is a per-class, compiler-generated array of function pointers to
+A vtable (virtual table) is a per-class, compiler-generated array of function pointers to
 the class's virtual function overrides. A vptr is a hidden per-object pointer to its
 class's vtable, set during construction. A virtual call reads the vptr, indexes the
-table, and jumps. These are an implementation technique, not mandated by the standard.
+vtable, and jumps. These are an implementation technique, not mandated by the standard.
 
 #### Q66
+
 **Is the existence and exact layout of a vtable guaranteed by the C++ standard?**
 
 No. The standard only specifies the observable behavior of virtual dispatch; it never
-mentions tables or vptrs. They are the common implementation (Itanium/MSVC ABIS) but the
+mentions vtables or vptrs. They are the common implementation (Itanium/MSVC ABIS) but the
 exact mechanism, layout, and size are implementation-defined. Portable code must not
-depend on table layout or on a vptr being at a particular offset.
+depend on vtable layout or on a vptr being at a particular offset.
 
 #### Q67
 
@@ -724,13 +732,14 @@ ambiguity when referring to the base's members and duplicated state. For example
 #### Q68
 
 **How does virtual inheritance solve the diamond problem?**
-Declaring the intermediate inheritance virtual" (e.g. 'class B : virtual A) makes all
+
+Declaring the intermediate inheritance `virtual` (e.g. 'class B : virtual A) makes all
 paths share a single common base subobject, eliminating duplication and ambiguity. The
 most-derived class is then responsible for initializing the virtual base directly. The
 trade-off is extra indirection to locate the shared base and more complex construction
 order.
 
-## object lifetime
+## Object lifetime
 
 #### Q69
 
@@ -765,12 +774,12 @@ C++ (`std::lock_guard`, `std::unique_ptr`, `std::fstream`).
 
 #### Q72
 
-**Why is RATI especially useful in exception-safe C++ code?**
+**Why is RAII especially useful in exception-safe C++ code?**
 
 When an exception propagates, the stack unwinds and destructors of all fully-constructed
 automatic objects run, so RAII guarantees resources are released even on the error path
-without explicit `try/catch` cleanup. This makes It easy to achieve the basic and strong
-exception-safety guarantees, Manual acquire/release code, by contrast, leaks whenever an
+without explicit `try/catch` cleanup. This makes it easy to achieve the basic and strong
+exception-safety guarantees. Manual acquire/release code, by contrast, leaks whenever an
 exception skips the release.
 
 #### Q73
@@ -788,8 +797,8 @@ then has dynamic storage duration and lives until a matching `delete`.
 
 `new`/`delete` create and destroy a single object; `new[]`/`delete[]` create and destroy
 an array, constructing/destroying each element and tracking the element count. You must
-pair them correctly: `delete` on array-`new` or `delete[]` on scalar- `new` is undefined
-behavior. In modern C++ prefer `std::vector` or `std::make_uniques<T[]>` to avoid manual
+pair them correctly: `delete` on array-`new` or `delete[]` on scalar-`new` is undefined
+behavior. In modern C++ prefer `std::vector` or `std::make_unique<T[]>` to avoid manual
 array `new`.
 
 #### Q75
@@ -797,7 +806,7 @@ array `new`.
 **What is wrong with this code?**
 
 ```cpp
-int* values - new int[10];
+int* values = new int[10];
 delete values;
 ```
 
@@ -844,7 +853,7 @@ detect it; RAII and smart pointers prevent most cases.
 
 #### Q80
 
-**why should owning raw pointers generally be avoided in modern C++?**
+**Why should owning raw pointers generally be avoided in modern C++?**
 
 Because manual ownership via raw pointers is error-prone: leaks, double frees,
 use-after-free, and unclear ownership, especially under exceptions. Smart pointers
@@ -855,20 +864,19 @@ and are exception-safe. Raw pointers/references are fine as non-owning observers
 
 **When would you use `std::unique_ptr`?**
 
-When you need exclusive,
-single-owner ownership of a heap resource with automatic release
+When you need exclusive, single-owner ownership of a heap resource with automatic release
 and zero runtime overhead compared to a raw pointer. It is move-only (no copying),
 expresses transfer of ownership clearly, and supports custom deleters. It is the default
 smart pointer; reach for it unless shared ownership is genuinely required.
 
 #### Q82
 
-**when would you use `std::shared_ptr`?**
+**When would you use `std::shared_ptr`?**
 
 When ownership is genuinely shared and the resource must live until the last owner is
-gone, with lifetime decided at run time (eg. shared nodes in a graph, objects captured by
+gone, with lifetime decided at run time (e.g. shared nodes in a graph, objects captured by
 multiple async tasks). It uses atomic reference counting, so it has more overhead than
-`unique_ptr` and should not be the default, Prefer `make_shared` and pass by `const&`
+`unique_ptr` and should not be the default. Prefer `make_shared` and pass by `const&`
 where you are not sharing ownership.
 
 #### Q83
@@ -877,14 +885,14 @@ where you are not sharing ownership.
 
 It provides a non-owning observer of a `shared_ptr`-managed object that does not keep it
 alive, letting you break reference cycles and safely detect whether the object still
-exists via lock(). It is used for back-pointers in parent/child graphs and caches. You
-must `lock()` it into a `shared ptr` before use.
+exists via `lock()`. It is used for back-pointers in parent/child graphs and caches. You
+must `lock()` it into a `shared_ptr` before use.
 
 #### Q84
 
-**what is a cyclic ownership problem?**
+**What is a cyclic ownership problem?**
 
-When two or more `shared ptr`s refer to each other in a cycle, their reference counts
+When two or more `shared_ptr`s refer to each other in a cycle, their reference counts
 never reach zero, so the objects are never destroyed and leak. The fix is to make one
 direction of the cycle a non-owning `std::weak_ptr` (or a raw pointer) so ownership is not
 circular. This is the main reason `weak_ptr` exists.

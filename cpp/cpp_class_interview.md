@@ -1,5 +1,5 @@
 
-<!-- docs/cpp/CPP_class_interview.md -->
+<!-- docs/cpp/cpp_class_interview.md -->
 
 ## C++ class and object interview questions
 
@@ -10,13 +10,14 @@ numbering; `Q42` is at `#q42`. The code-based questinos keep their answers inlin
 
 1. What is the difference between a class and an object?
 
-2. What is the difference between "class" and struct in C++?
+2. What is the difference between "class" and `struct` in C++?
 
-3. What are the default access specifiers for class" and struct?
+3. What are the default access specifiers for class" and `struct`?
 
 4. What is the difference between a data member and a member function?
 
-5. Can a class be empty? What is the typical size of an empty class, and why?
+5. Can a class be empty? What is the typical size of an empty class, and why? (See
+    Question 8 below.)
 
 6. Can an object be created without explicitly defining a constructor?
 
@@ -25,7 +26,7 @@ numbering; `Q42` is at `#q42`. The code-based questinos keep their answers inlin
 
 8. What is the purpose of the this pointer?
 
-9. Can 'this" be null inside a non-static member function?
+9.  Can 'this" be null inside a non-static member function?
 
 10. What is the difference between static and non-static data members?
 
@@ -44,35 +45,35 @@ A(const A& other);
 A(A&& other);
 ```
 
-14.  In what order are data members initialized?
+14. In what order are data members initialized?
 
 ```cpp
 class Example {
-	int first;
-	int second;
+    int first;
+    int second;
 
 public:
-	Example()
-		: second(2), first(1) {}
+    Example()
+        : second(2), first(1) {}
 };
 ```
 
 15. What is the difference between initialization and assignment?
 
-16. Why should members generally be initialized using a member-initializer
-    list?
+16. Why should members generally be initialized using a member-initializer list?
 
-17. What happens if a const' data member is not included in the constru list?
+17. What happens if a const' data member is not included in the constructor's initializer
+    list?
 
 18. What happens if a reference data member is not initialized?
 
-19. In what order are constructors and destructors called in an inheritan
+19. In what order are constructors and destructors called in an inheritance hierarchy?
 
 20. Why should a base class destructor often be virtual?
 
 21. What happens when a constructor throws an exception?
 
-22. Can a constructor be virtual? why or why not?
+22. Can a constructor be virtual? Why or why not?
 
 23. Can a destructor be pure virtual?
 
@@ -98,15 +99,15 @@ public:
 
 ```cpp
 class Buffer {
-	char* data;
+    char* data;
 
 public:
-	Buffer(std::size_t size)
-		: data(new char[size]) {}
+    Buffer(std::size_t size)
+        : data(new char[size]) {}
 
-	~Buffer() {
-		delete[] data;
-	}
+    ~Buffer() {
+        delete[] data;
+    }
 };
 ```
 
@@ -130,12 +131,12 @@ public:
 
 41. What are the advantages and disadvantages of using `friend`?
 
-42. What is a const member function?
+42. What is a `const` member function?
 
 ```cpp
 class User {
 public:
-	int id() const;
+    int id() const;
 };
 ```
 
@@ -149,6 +150,7 @@ public:
 void process();
 void process() const;
 ```
+
 46. Can a static member function access non-static data members directly?
 
 47. Why does a static member function not have a `this` pointer?
@@ -179,6 +181,7 @@ void process() const;
 ```cpp
 class Base {};
 class Derived : public Base {};
+
 Derived d;
 Base b = d;
 ```
@@ -196,12 +199,12 @@ Base b = d;
 ```cpp
 class Base {
 public:
-	virtual void run();
+    virtual void run();
 };
 
 class Derived : public Base {
 public:
-	void run() override;
+    void run() override;
 };
 
 Base* ptr = new Derived;
@@ -212,23 +215,24 @@ ptr->run();
 
 64. What is the typical memory cost of adding virtual functions to a class?
 
-65. What is a table and what is a vptr?
+65. What is a vtable and what is a vptr?
 
-66. Is the existence and exact layout of a table guaranteed by the C++ standard?
+66. Is the existence and exact layout of a vtable guaranteed by the C++ standard?
 
 67. What is the diamond inheritance problem?
 
 68. How does virtual inheritance solve the diamond problem?
 
-### object lifetime
+### Object lifetime
 
 69. What is an object's lifetime?
 
-70. What is the difference between automatic, static, thread-local, and dynamic storage duration?
+70. What is the difference between automatic, static, thread-local, and dynamic storage
+    duration?
 
 71. What is RAII?
 
-72. Why is RAIl especially useful in exception-safe C++ code?
+72. Why is RAII especially useful in exception-safe C++ code?
 
 73. What happens when an object is created using `new`?
 
@@ -251,7 +255,7 @@ delete values;
 
 80. Why should owning raw pointers generally be avoided in modern C++?
 
-81. When would you use `std::unique ptr`?
+81. When would you use `std::unique_ptr`?
 
 82. When would you use `std::shared_ptr`?
 
@@ -261,7 +265,7 @@ delete values;
 
 ## Code-based interview questions
 
-### question 1: initialization order
+### Question 1: initialization order
 
 What does this print?
 
@@ -269,26 +273,26 @@ What does this print?
 #include <iostream>
 
 class Example {
-	int first;
-	int second;
+    int first;
+    int second;
 public:
-	Example()
-		: second(2), first(second) {}
-	void print() const {
-		std::cout << first << ' ' << second << '\n';
-	}
+    Example()
+        : second(2), first(second) {}
+    void print() const {
+        std::cout << first << ' ' << second << '\n';
+    }
 };
 
 int main() {
-	Example e;
-	e->print();
+    Example e;
+    e->print();
 }
 ```
 
 What should the candidate notice?
 
 <details>
-<Summary>Expected discussion</summary>
+<summary>Expected discussion</summary>
 
 Members are initialized in the order of declaration, not the order in the initializer
 list. `first` is initialized before `second`, so `first(second)` uses `second` before it
@@ -298,28 +302,28 @@ has been initialized. This is a bug and may produce an indeterminate value.
 
 ### Question 2: virtual destructor
 
-what is wrong with this code?
+What is wrong with this code?
 
 ```cpp
 class Base {
 public:
-	~Base() = default;
+    ~Base() = default;
 };
 
 class Derived : public Base {
-	int* data;
+    int* data;
 
 public:
-	Derived ()
-		: data(new int[10]) {}
+    Derived ()
+        : data(new int[10]) {}
 
-	~Derived() {
-		delete[] data;
-	}
+    ~Derived() {
+        delete[] data;
+    }
 };
 int main() {
-	Base* object = new Derived;
-	delete object;
+    Base* object = new Derived;
+    delete object;
 }
 ```
 
@@ -332,29 +336,29 @@ class:
 ```cpp
 class Base {
 public:
-	virtual ~Base() = default;
+    virtual ~Base() = default;
 };
 ```
 
-without it, the behavior is undefined.
+Without it, the behavior is undefined.
 
 </details>
 
-### Question з: copy constructor
+### Question 3: copy constructor
 
 What problem exists here?
 
 ```cpp
 class Resource {
-	int* value;
+    int* value;
 
 public:
-	explicit Resource(int x)
-		: value(new int(x)) {}
+    explicit Resource(int x)
+        : value(new int(x)) {}
 
-	~Resource() {
-		delete value;
-	}
+    ~Resource() {
+        delete value;
+    }
 };
 ```
 
@@ -368,7 +372,7 @@ Possible solutions include:
 
 - Implementing deep copy and move operations
 - Deleting copying
-- Replacing the raw pointer with `std::unique_ptreint>`
+- Replacing the raw pointer with `std::unique_ptr<int>`
 
 </details>
 
@@ -378,7 +382,7 @@ Is this safe?
 
 ```cpp
 const std::string& get_name() {
-	return std::string("temporary");
+    return std::string("temporary");
 }
 ```
 
@@ -389,8 +393,8 @@ No. The temporary string is destroyed when the function returns, leaving a dangl
 reference. Return by value instead:
 
 ```cpp
-std::string get name() {
-	return "temporary";
+std::string get_name() {
+    return "temporary";
 }
 ```
 
@@ -398,26 +402,26 @@ std::string get name() {
 
 ### Question 5: `const` correctness
 
-which functions can be called here?
+Which functions can be called here?
 
 ```cpp
 class Counter {
-	int value{};
+    int value{};
 
 public:
-	int get() const {
-		return value;
-	}
+    int get() const {
+        return value;
+    }
 
-	void increment() {
-		++value;
-	}
+    void increment() {
+        ++value;
+    }
 };
 
 const Counter a;
 Counter b;
 
-a.get() ;
+a.get();
 a.increment();
 
 b.get();
@@ -425,9 +429,9 @@ b.increment();
 ```
 
 <details>
-<summary >Expected discussion</ summary>
+<summary>Expected discussion</summary>
 
-`a.get()` is valid because `get()` is const. `a.increment()` is invalid because it
+`a.get()` is valid because `get()` is `const`. `a.increment()` is invalid because it
 modifies the object. Both functions can be called on `b`.
 
 </details>
@@ -441,31 +445,31 @@ What is printed?
 
 class Base {
 public:
-	virtual void print() {
-		const std::cout <<< "Base\n";
-	}
+    virtual void print() {
+        const std::cout <<< "Base\n";
+    }
 };
 
 class Derived : public Base {
 public:
-	void print() const override {
-		std::cout << "Derived\n";
-	}
+    void print() const override {
+        std::cout << "Derived\n";
+    }
 };
 
 void print_by_value(Base object) {
-	object.print();
+    object.print();
 }
 
 void print_by_reference(const Base& object) {
-	object.print();
+    object.print();
 }
 
 int main() {
-	Derived d;
+    Derived d;
 
-	print_by_value(d);
-	print_by_reference(d);
+    print_by_value(d);
+    print_by_reference(d);
 }
 
 ```
@@ -483,15 +487,15 @@ Passing by value slices the `Derived` part. Passing by reference preserves polym
 
 ### Question 7: defaulted move operations
 
-what can happen when a class contains a `std::unique_ptr`?
+What can happen when a class contains a `std::unique_ptr`?
 
 ```cpp
 class Owner {
-	std::unique _ptr<int> value;
+    std::unique _ptr<int> value;
 
 public:
-	Owner ()
-		: value(std::make_unique<int>(42)) {}
+    Owner ()
+        : value(std::make_unique<int>(42)) {}
 };
 ```
 
@@ -513,23 +517,23 @@ What do these print on a typical 64-bit platform, and why?
 struct Empty {};
 
 struct WithVirtualFunction {
-	virtual void f();
+    virtual void f();
 };
 
 struct Derived: Empty {
-	int value;
+    int value;
 };
 
 struct Holder {
-	[[no_unique_address]] Empty tag;
-	int value;
+    [[no_unique_address]] Empty tag;
+    int value;
 };
 
 int main() {
-	std::cout << sizeof(Empty) << "\n";
-	std::cout << sizeof(WithVirtualFunction) << "\n";
-	std::cout << sizeof(Derived) << "\n";
-	std::cout << sizeof(Holder) << "\n";
+    std::cout << sizeof(Empty) << "\n";
+    std::cout << sizeof(WithVirtualFunction) << "\n";
+    std::cout << sizeof(Derived) << "\n";
+    std::cout << sizeof(Holder) << "\n";
 }
 ```
 <details>
@@ -541,6 +545,31 @@ Typical output is `1`, `8`, `4`, `4`. The exact sizes are implementation-defined
 `Empty` had size zero, the elements of `Empty objects[2]` would share an address, because
 advancing by the element size would advance by zero. The byte stores no data; it gives the
 object an address and makes arrays of the type work.
+
+```cpp
+static_assert(sizeof(Empty) >= 1);
+```
+**A class with no data members can still need storage.** `WithvirtualFunction` declares no
+data, but each object holds a table pointer, commonly 8 bytes on 64-bit systems.
+Alignment and other members can also make a class larger.
+
+**Empty base optimization (EBO).** `Empty` on its own has size 1, but as a base class it
+may occupy no extra space, so `sizeof(Derived) == sizeof(int)` is commonly true.
+
+**`[Ino_unique_address]]` (C++20).** An empty *member* normally costs at least one byte
+plus padding. The attribute lets the compiler place `tag` in padding or at the same
+address as another member when allowed, so `Holder` can be the size of an `int`.
+
+Summary:
+
+- Ordinary empty object: at least one byte.
+- Empty base class: may add zero bytes.
+- `[[no_unique_address]]` empty member: may add zero bytes.
+- Virtual functions, alignment, or other members can make the class larger.
+
+*FolLow-up:* why do standard containers and `std::unique_ptr` care about this? Their
+allocator and deleter are usually empty types; EBO or `[[no_unique_address]]` keeps them
+from adding size to every container or smart pointer.
 
 </details>
 
@@ -556,17 +585,19 @@ For each practice session:
 ```bash
 g++ -std=c++20 -Wall -Wextra -Wpedantic -Wconversion \
     -fsanitize=address,undefined \
-	source. cpp
+    source. cpp
 ```
 
 - Explain:
-  -Who owns each resource?
-  -When is each object constructed?
-  -when is each object destroyed?
-  -Can the class be copied?
-  -Can it be moved?
-  -Is it safe under exceptions?
-  -Is polymorphism involved?
+  - Who owns each resource?
+  - When is each object constructed?
+  - When is each object destroyed?
+  - Can the class be copied?
+  - Can it be moved?
+  - Is it safe under exceptions?
+  - Is polymorphism involved?
 
-A strong interview candidate should be able to explain not only whether code works, but also object lifetime, ownership, exception safety, copying behavior, and the reason behind the design.
+A strong interview candidate should be able to explain not only whether code works, but
+also object lifetime, ownership, exception safety, copying behavior, and the reason behind
+the design.
 

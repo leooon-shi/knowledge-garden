@@ -3,7 +3,7 @@
 ## C++ concurrency interview questions
 
 Answers: [`cpp_concurrency_interview_answers.md`](cpp_concurrency_interview_answers.md)
-(same numbering; `Q42` is at `#q42`, code questions 3 at `#c3`.
+(same numbering; `Q42` is at `#q42`, code question 3 at `#c3`.
 
 ### Fundamental concepts
 
@@ -71,22 +71,22 @@ Answers: [`cpp_concurrency_interview_answers.md`](cpp_concurrency_interview_answ
 
 ```cpp
 void start() {
-	int value = 42;
+    int value = 42;
 
-	std::thread worker([&] {
-		use(value);
-	});
+    std::thread worker([&] {
+        use(value);
+    });
 
-	worker detach();
+    worker.detach();
 }
 ```
 
 31. How should thread arguments be passed safely?
 
-32. What is the purpose of `std::thread::hardware_concurrency()`) ?
+32. What is the purpose of `std::thread::hardware_concurrency()`)?
 
 33. Why should its return value not always be treated as the exact number of usable CPU
-   cores?
+    cores?
 
 ## Mutexes and locks
 
@@ -108,11 +108,11 @@ void start() {
 
 42. What does `std::defer_lock` mean?
 
-43. What is the purpose of `std::adopt_lock` ?
+43. What is the purpose of `std::adopt_lock`?
 
 44. What is a timed mutex?
 
-45. What is the difference between `try_lock()`, `try_lock_for()`, and `try_lock until()`?
+45. What is the difference between `try_lock()`, `try_lock_for()`, and `try_lock_until()`?
 
 46. How do you protect multiple related variables with a mutex?
 
@@ -143,16 +143,18 @@ void start() {
 ## Condition variables
 
 59. What problem does `std::condition_variable` solve?
+
 60. How does a condition variable work with a mutex?
+
 61. Why must a condition variable always be used with a predicate?
 
 ```cpp
 condition.wait(lock, [&] {
-	return !queue.empty() || stopped;
+    return !queue.empty() || stopped;
 });
 ```
 
-62.  What is a spurious wakeup?
+62. What is a spurious wakeup?
 
 63. Why must the condition be checked in a loop?
 
@@ -168,11 +170,11 @@ condition.wait(lock, [&] {
 
 69. What happens if the producer adds data before the consumer starts waiting?
 
-70.  How should shutdown be implemented for a condition-variable-based worker queue
+70. How should shutdown be implemented for a condition-variable-based worker queue
 
 ## Atomics and the C++ memory model
 
-71.  What is `std::atomic`?
+71. What is `std::atomic`?
 
 72. Why is incrementing a normal integer from multiple threads unsafe?
 
@@ -190,14 +192,14 @@ condition.wait(lock, [&] {
 
 79. What is sequential consistency?
 
-80.  What are the C++ memory-order options?
+80. What are the C++ memory-order options?
 
-     - `memory_order_relaxed`
-     - `memory_order_acquire`
-     - `memory_order_release`
-     - `memory_order_aca_rel`
-     - `memory_order_seq_cst`
-     - `memory_order_consume`
+ - `memory_order_relaxed`
+ - `memory_order_acquire`
+ - `memory_order_release`
+ - `memory_order_aca_rel`
+ - `memory_order_seq_cst`
+ - `memory_order_consume`
 
 81. When is `memory_order_relaxed` appropriate?
 
@@ -209,7 +211,7 @@ condition.wait(lock, [&] {
 
 85. What does `memory_order_seq_cst` provide beyond acquire and release?
 
-86. Why is `memory_order_seq_st`" often easier to reason about?
+86. Why is `memory_order_seq_cst` often easier to reason about?
 
 87. What are the performance and correctness risks of using relaxed memory ordering?
 
@@ -239,20 +241,23 @@ condition.wait(lock, [&] {
 ## Compare-and-exchange
 
 99. What is compare-and-exchange?
+
 100. What is the difference between `compare_exchange_weak()` and
-   `compare_exchange_strong()`?
+     `compare_exchange_strong()`?
+
 101. Why can `compare_exchange_weak()` fail even when the comparison appears to succeed?
+
 102. Why is the weak form usually used inside a loop?
 
 ```cpp
 auto expected = old_value;
 
 while (!value.compare_exchange_weak(
-	expected,
-	new_value,
-	std::memory_order_acq_rel,
-	std::memory_order_acquire)) {
-	// expected is updated after failure
+    expected,
+    new_value,
+    std::memory_order_acq_rel,
+    std::memory_order_acquire)) {
+    // expected is updated after failure
 }
 ```
 
@@ -290,7 +295,7 @@ while (!value.compare_exchange_weak(
 
 ## False sharing and cache behavior
 
-118. What is false sharin?
+118. What is false sharing?
 
 119. How can two logically independent variables cause cache-line contention?
 
@@ -298,7 +303,7 @@ while (!value.compare_exchange_weak(
 
 ```cpp
 struct alignas(64) Counter {
-	std::atomic<std::uint64_t> value{0};
+    std::atomic<std::uint64_t> value{0};
 };
 ```
 
@@ -334,13 +339,13 @@ struct alignas(64) Counter {
 
 135. What is the difference between `std::launch::async` and `std::launch::deferred`?
 
-136. why can relying on the default launch policy be risky?
+136. Why can relying on the default launch policy be risky?
 
 137. What is `std::packaged_task`?
 
 138. Compare `std::async`, `std::packaged_task`, and a custom thread pool.
 
-139. What is the purpose of `std::shared` future?
+139. What is the purpose of `std::shared_future`?
 
 140. What happens if a future referring to an asynchronous task is destroyed?
 
@@ -372,7 +377,7 @@ struct alignas(64) Counter {
 
 153. How do you prevent a task from waiting forever?
 
-154. What is nested parallelism, and why can it exhaust a thread pool?
+154. What is nested parallelism, and Why can it exhaust a thread pool?
 
 ## Thread-safe containers and queues
 
@@ -388,9 +393,9 @@ struct alignas(64) Counter {
 
 160. How would you make a `std::vector` safe for concurrent access?
 
-161. How would vou implement a bounded blocking queue?
+161. How would you implement a bounded blocking queue?
 
-162. What is the ditterence between a blocking queue and a lock-tree queue?
+162. What is the difference between a blocking queue and a lock-free queue?
 
 163. What is a single-producer/single-consumer queue?
 
@@ -422,7 +427,7 @@ struct alignas(64) Counter {
 
 ## Lock-free programming
 
-177. What does Lock-free programming mean?
+177. What does lock-free programming mean?
 
 178. What are the main difficulties of writing lock-free code?
 
@@ -442,7 +447,7 @@ struct alignas(64) Counter {
 
 186. How can tagged pointers help with lock-free structures?
 
-187. What is pointer alignment, and why can it matter for tagged pointers?
+187. What is pointer alignment, and Why can it matter for tagged pointers?
 
 188. Why can memory reclamation dominate lock-free data-structure performance?
 
@@ -492,7 +497,7 @@ struct alignas(64) Counter {
 
 ## Coroutines and concurrency
 
-210. Are C+ coroutines automatically concurrent?
+210. Are C++ coroutines automatically concurrent?
 
 211. What is the difference between a coroutine and a thread?
 
@@ -508,7 +513,7 @@ struct alignas(64) Counter {
 
 217. How can cancellation be propagated through an asynchronous coroutine call chain?
 
-218. How do coroutines compare with a thread pool for hieh-concurrenc workloads?
+218. How do coroutines compare with a thread pool for high-concurrency workloads?
 
 ## Code-based questions
 
@@ -520,7 +525,7 @@ What is wrong with this code?
 int counter = 0;
 
 void worker() {
-	++counter;
+    ++counter;
 }
 ```
 
@@ -533,14 +538,14 @@ bool ready = false;
 int value = 0;
 
 void producer() {
-	value = 42;
-	ready = true;
+    value = 42;
+    ready = true;
 }
 
 void consumer() {
-	while (!ready) {
-	}
-	use(value);
+    while (!ready) {
+    }
+    use(value);
 }
 ```
 
@@ -559,12 +564,12 @@ std::mutex first;
 std::mutex second;
 
 void task_a() {
-	std::lock_guard lock1(first);
-	std::lock_guard lock2(second);
+    std::lock_guard lock1(first);
+    std::lock_guard lock2(second);
 }
 void task_b() {
-	std::lock_guard lock1(second);
-	std::lock_guard lock2(first);
+    std::lock_guard lock1(second);
+    std::lock_guard lock2(first);
 }
 ```
 
@@ -588,12 +593,12 @@ std::condition_variable cv;
 bool ready = false;
 
 void consumer () {
-	std::unique_lock lock(mutex);
-	cv.wait(lock);
+    std::unique_lock lock(mutex);
+    cv.wait(lock);
 
-	if (ready) {
-		consume();
-	}
+    if (ready) {
+        consume();
+    }
 }
 ```
 
@@ -601,7 +606,7 @@ What is wrong with this code?
 
 Expected discussion:
 
-- purious wakeups
+- Spurious wakeups
 - Missing predicate
 - Correct use of `wait(lock, predicate)`
 
@@ -609,11 +614,11 @@ Expected discussion:
 
 ```cpp
 std::thread create_worker() {
-	int value = 10;
+    int value = 10;
 
-	return std::thread([&] {
-		use(value);
-	});
+    return std::thread([&] {
+        use(value);
+    });
 }
 ```
 
@@ -622,10 +627,10 @@ What happens when the returned thread starts after `value` has gone out of scope
 ### Question 7: relaxed atomic
 
 ```cpp
-std::atomickint> counter{0};
+std::atomic<int> counter{0};
 
 void worker() {
-	counter.fetch_add(1, std:: memory_order_relaxed);
+    counter.fetch_add(1, std:: memory_order_relaxed);
 }
 ```
 
@@ -638,13 +643,13 @@ data?
 std::vector<int> values;
 
 void producer() {
-	values.push_back(1);
+    values.push_back(1);
 }
 
 void consumer() {
-	if (!values. empty()) {
-		process(values. front());
-	}
+    if (!values. empty()) {
+        process(values. front());
+    }
 }
 ```
 
@@ -672,7 +677,7 @@ Implement an atomic increment using a compare-and-exchange loop. Explain:
 
 220. Design an SPSC ring buffer for fixed-size packets.
 
-221. Design an MPM queue for a worker pool.
+221. Design an MPMC queue for a worker pool.
 
 222. Design a shutdown mechanism for a service with multiple worker threads.
 
@@ -703,7 +708,7 @@ Possible tools include:
 - Core dumps
 - Thread dumps
 - Performance counters
-- stress and randomized testing
+- Stress and randomized testing
 
 232. How would you benchmark a concurrent queue fairly?
 
@@ -731,7 +736,7 @@ Possible tools include:
 
 237. Explain acquire-release synchronization with a producer-consumer example.
 
-238. Explain why `volatile` is not a replacement for `std::atomic`.
+238. Explain Why `volatile` is not a replacement for `std::atomic`.
 
 239. Describe a deadlock and at least three ways to prevent it.
 
@@ -743,7 +748,7 @@ Possible tools include:
 
 243. Explain how you would safely reclaim memory in a lock-free linked structure.
 
-244. Describe a situation where a lock-free implementation perfors worse than a
+244. Describe a situation where a lock-free implementation performs worse than a
      mutex-based implementation.
 
 245. Design concurrency for a high-throughput packet-forwarding service, including:
