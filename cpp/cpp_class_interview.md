@@ -447,7 +447,7 @@ What is printed?
 class Base {
 public:
     virtual void print() const {
-        const std::cout << "Base\n";
+       std::cout << "Base\n";
     }
 };
 
@@ -472,7 +472,6 @@ int main() {
     print_by_value(d);
     print_by_reference(d);
 }
-
 ```
 
 <details>
@@ -551,6 +550,7 @@ object an address and makes arrays of the type work.
 ```cpp
 static_assert(sizeof(Empty) >= 1);
 ```
+
 **A class with no data members can still need storage.** `WithvirtualFunction` declares no
 data, but each object holds a vtable pointer, commonly 8 bytes on 64-bit systems.
 Alignment and other members can also make a class larger.

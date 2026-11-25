@@ -2,7 +2,7 @@
 
 # Lambda Evolution: C++11 -> C++26
 
-**Status note:** Ct+11-C++20 features are well-established; C++23 is finalized;
+**Status note:** C++11-C++20 features are well-established; C++23 is finalized;
 C++26 items are newer/not-yet-published with lagging support - flagged inline.
 
 The unifying mental model throughout: **a lambda is sugar for a compiler-generated closure
@@ -141,7 +141,7 @@ Lambda-related items are consolidating rather than revolutionary:
   with move-only types, foundational to modern async C++.
 - **Recursive lambdas via deducing `this` (23)** remove the `std::function` tax for local
   self-recursion.
-- **Version/feature-test awareness** - generic lambdas need Ct+14, `[*this]` C++17,
+- **Version/feature-test awareness** - generic lambdas need C++14, `[*this]` C++17,
   deducing-`this` recursion C++23; gate newer ones on feature-test macros.
 
 ## Interview Q8A
@@ -179,7 +179,7 @@ stored callbacks or coroutine/async continuations; copy the state so lifetime is
 self-contained, *Red flag* Assuming `[=]` copies members including `this` safely
 (pre-C++20 it captured a raw `this`),
 
-**Q: How do you write a recursive lambda in Ct+23, and why is it better than before?** A:
+**Q: How do you write a recursive lambda in C++23, and why is it better than before?** A:
 C++23 uses deducing `this` (the explicit object parameter):
 `auto fib = [](this auto&& self, int n) -> int{ return n < 2 ? n : self(n-1) + self(n-2); };`.
 `self` is the closure itself, so it can call itself directly. Before C++23 you needed

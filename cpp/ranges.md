@@ -2,10 +2,10 @@ K!-- cpp/ranges. md --
 # C++20 Ranges
 A range is anything you can iterate: a pair of "[begin, end) bundled into one object. Th Ranges library (C++20, extended in C++23) builds two things on top of that idea:
 1.
-**Range algorithms**- std: :ranges: :sort(v) instead of std: sort(v.begin(), v.end())
+**Range algorithms**- std::ranges: :sort(v) instead of std::sort(v.begin(), v.end())
 2. **Views & adaptors** - lazy, composable pipelines: "v | filter(...) | transform(...)*• If you have worked through the coroutine **generator** exercises in exercises/, views will feel familiar: both are *Lazy pulL* sequences. A view is the STL's built-in, allocation-free way to express the same idea a generator expresses with co yield.
 *   Toolchain note: examples verified on **g++ 13**, '-std=c++20°. Core C++20 views all
-*   work. C++23 "zip / enumerate work; std: :ranges::to does **not** (a manual "for" loop
+*   work. C++23 "zip / enumerate work; std::ranges::to does **not** (a manual "for" loop
 *   into a container is used instead where needed).
 ## Table of Contents
 - [C++20 Ranges](#c20-ranges)
@@ -39,18 +39,18 @@ forward _range	single-pass, read once multi-pass, re-iterable	input streams, gen
 ## 1. Range concepts and the vocabulary
 The concept hierarchy (each refines the previous):
 "span"
-**view** is a range that is cheap (o(1)) to copy and does not own its elements (std: :ranges: view). Views are the composable building blocks; containers are the data.
+**view** is a range that is cheap (o(1)) to copy and does not own its elements (std::ranges: view). Views are the composable building blocks; containers are the data.
 #include <ranges›
-static_assert(std: ranges: random_access_rangestd:: vector‹int»; static_assert(std: :ranges: :contiguous_range‹std: astring›);
-static_assert(std: granges: :viewstd: ranges: iota_viewsint, int>>):
+static_assert(std::ranges: random_access_rangestd:: vector‹int»; static_assert(std::ranges: :contiguous_range‹std: astring›);
+static_assert(std::granges: :viewstd: ranges: iota_viewsint, int>>):
 ## 2. Range algorithms
-*std: ranges:: versions of ‹algorithm› take a range directly, return richer results, and support **projections** - a per-element transform applied before the predicate, so you can sort/search "by a field" without a custom comparator.
+*std::ranges:: versions of ‹algorithm› take a range directly, return richer results, and support **projections** - a per-element transform applied before the predicate, so you can sort/search "by a field" without a custom comparator.
 •**cpp
 #include <algorithm›
 #include <ranges›
 #include ‹vector›
 #include ‹string›
-struct Person { std: :string name; int age; };
+struct Person { std::string name; int age; };
 std:: vector‹Person› people = ({"carol",40},("alice", 30), ("bob", 25));
 // sort by age using a PROJECTIONL (&Person: :age) - no lambda comparator needed.
 std:: ranges::sort(people, (), &person: :age);
@@ -58,11 +58,11 @@ std:: ranges::sort(people, (), &person: :age);
 ## 2. Range algorithms
 // people is now bob (25), alice(30), carol(40)
 // Find by projected field.
-auto it = std: :ranges: :find(people, 30, &Person: sage);
+auto it = std::ranges: :find(people, 30, &Person: sage);
 // -› alice
 // Algorithms return useful info: ranges:: for_each returns (in, fun}.
-std: vector<int> v = {1,2,3,4,5);
-auto n = std: :ranges::count_if(v, [](int x){ return x > 2; });
+std::vector<int> v = {1,2,3,4,5);
+auto n = std::ranges::count_if(v, [](int x){ return x > 2; });
 //3
 The projection argument (the "&Person: age) is the everyday win of range algorithms:
 •sortpeople, (), &Person: sage) reads far better than a [](auto&a, auto&b){ return a.age ‹ b.age; } comparator.
@@ -72,8 +72,8 @@ A **view adaptor** wraps a range and lazily transforms it. operator| chains them
 cpp
 #include <ranges> #include ‹vector›
 #include <iostream>
-namespace views = std: :views;
-// alias; std: :ranges::views == std::views
+namespace views = std::views;
+// alias; std::ranges::views == std::views
 int main() {
 std:: vector<int> v = (1,2,3,4,5,6,7,8, 9,10);
 auto result = v
@@ -83,7 +83,7 @@ views: transform([](int x){ return x * x; }) views:: :take(3);
 / 416
 36 64 100
 // 4 16 36
-for (int x: result) std: :cout « x«•';
+for (int x: result) std::cout « x«•';
 // 4 16 36
 *v | filter(p)* is exactly views:: filter(v, p) - the pipe is sugar. Composition is 0(1):
 
@@ -115,7 +115,7 @@ zip(r...)	tuples of corresponding elements	C++23
 -
 Factories (iota, "single" , "empty") start a pipeline instead of adapting one:
 cpp
-namespace views = std: :views;
+namespace views = std::views;
 // 3,4,5,6,7 (iota is lazy; the bound makes it finite)
 for (int x: views: views::iota(3, 8)) std:: cout « x«':
 // map keys / values
@@ -131,24 +131,24 @@ for (auto& val: m | views::values) std::cout «< val: // 123
 
 
 // split a string on commas
-std: string s = "a,bb, ccc";
+std::string s = "a,bb, ccc";
 for (auto part: s | views::split(',')) {
 std:: string p(part.begin(), part.end());
-std: :cout « p«
+std::cout « p«
 }
 // materialise one field
 // a.bb.ccc.
 // flatten with join
 std:: vector‹std: :vector<int» nested = {{1,2}, {3),{4,5});
-for (int x: nested | views: join) std: :cout «< x; // 12345
+for (int x: nested | views: join) std::cout «< x; // 12345
 C++23 "zip" and "enumerate" (available on g++ 13):
 •**cpp
 std:: vector‹std: string> names = {"a"
 ', "b", "c"}3
 std:: vector‹int> scores = (10,20,30};
-for (auto [name, scorel: std: :views: :zip(names, scores))
+for (auto [name, scorel: std::views: :zip(names, scores))
 std:: cout « name « = «< score « ';
-for (auto [i, name]: std: :views: :enumerate(names))
+for (auto [i, name]: std::views: :enumerate(names))
 std:: cout «< i « ':' « name «< "';
 // a=10 b=20 c=30
 // 0:a 1:b 2:0
@@ -185,13 +185,13 @@ Consequences to internalise:
 #* 6. A worked pipeline
 The Week 4 practice from the study plan: parse a CV, filter, transform, aggregate - with ranges instead of hand-written loops.
 •**cpp
-namespace views = std: :views:
+namespace views = std::views:
 
 int main() i
-std: string csv = "3,17,4,9,22,8,15,42, 1, 30";
+std::string csv = "3,17,4,9,22,8,15,42, 1, 30";
 // Parse "a,b,c" -> ints, keep those › 10, double them, sum the result. std:: vector<int> nums;
 for (auto field : csv | views::split(',')) {
-std: :string_view sv(field.begin(), field.end());
+std::string_view sv(field.begin(), field.end());
 int value = 0;
 std:: from_chars(sv.data(), sv.data() + sv. size(), value);
 nums• push_back(value);
@@ -206,14 +206,14 @@ for (int x: pipeline) total += x; std:: cout « "total = " « total «< "\n';
 84
 • 60
 // 252
-Note the "split" step is materialised through a small loop because parsing needs a contiguous "string_view, and because g++ 13 lacks std: ranges: :to with ranges:: to, the parse becomes a single expression:
-• On a Ct+23 Library
+Note the "split" step is materialised through a small loop because parsing needs a contiguous "string_view, and because g++ 13 lacks std::ranges: :to with ranges:: to, the parse becomes a single expression:
+• On a C++23 Library
 *** cpp
-// C++23 with std: :ranges::to (NOT available on g++ 13):
+// C++23 with std::ranges::to (NOT available on g++ 13):
 auto nums = csv | views: :split(',')
 views: transform([](auto f) {
-int vf: std: string_view sv(f.begin(), f.end()):
-std: : from_chars(sv.data(), sv.data()+sv.size(), v);
+int vf: std::string_view sv(f.begin(), f.end()):
+std:: from_chars(sv.data(), sv.data()+sv.size(), v);
 return vi
 })
 std:: ranges: to‹std: :vector>);
@@ -225,14 +225,14 @@ A view does **not** own its data. If the underlying range dies, the view dangles
 auto bad = std:: vector<int>{1,2,3} | std:: views: transform([](int x)(return x*x;});
 for (int x: bad) /* undefined behaviour */;
 // FIX: keep the owner alive.
-std: vector‹int> owner = {1,2,3);
-auto ok = owner | std: views:: transform([](int x){ return x*x; });
+std::vector‹int> owner = {1,2,3);
+auto ok = owner | std::views:: transform([](int x){ return x*x; });
 The library helps in two ways:
--   Range algorithms return std: :ranges: :dangling" instead of an iterator when called on an Irvalue range, turning a runtime bug into a compile error.
+-   Range algorithms return std::ranges: :dangling" instead of an iterator when called on an Irvalue range, turning a runtime bug into a compile error.
 -   views:: owning_view (and passing an rvalue range into a pipeline) can take ownership so the pipeline is self-contained - but be deliberate about it.
 Rule of thumb: a view should not outlive the range it adapts. If you need to store or return the result, materialise it into a container.
 ## 8. Bounded iterator operations
-Separate from views, "std: ranges" also provides **bounds-aware** versions of the classic iterator utilities. classic std: prev / std: :next/std:: advance have no bounds awareness - stepping past begin() / end() is undefined behaviour:
+Separate from views, "std::ranges" also provides **bounds-aware** versions of the classic iterator utilities. classic std::prev / std::next/std:: advance have no bounds awareness - stepping past begin() / end() is undefined behaviour:
 ***cpp
 std:: vector<int> v = {3, 1, 4};
 auto it = v.begin() + 1;
@@ -244,13 +244,13 @@ The std:: ranges" overloads take a
 cpp
 
 ## 8. Bounded iterator operations #include <ranges>
-std: vector<int>v = {3, 1, 4};
-auto pv = std: :ranges: :prev(v.begin() + 1, 42, v.begin()); // stops at begin() -> 3
-auto n = std: :ranges: :nextv.begin(), 100, v.end());
+std::vector<int>v = {3, 1, 4};
+auto pv = std::ranges: :prev(v.begin() + 1, 42, v.begin()); // stops at begin() -> 3
+auto n = std::ranges: :nextv.begin(), 100, v.end());
 // stops at end()
 auto it = v.begin() + 1;
-int remaining = std: ranges: :advanceit, 42, v.end());
-| Feature	std: prev / advance	• std:: ranges: prev
+int remaining = std::ranges: :advanceit, 42, v.end());
+| Feature	std::prev / advance	• std:: ranges: prev
 Bounds checking
 •advance return
 Cost
@@ -265,7 +265,7 @@ ranges: :advance returns the *unused* step count, so you can tell whether the bo
 Handy for sliding windows and pagination:
 **cpp
 // Safe sliding lookback of up to 3 elements.
-std: vector<int> data = {10,20,30,40, 50);
+std::vector<int> data = {10,20,30,40, 50);
 for (auto it = data.begin(); it I= data.end(); Hit) {
 auto start = std:: ranges:: prev(it, 3, data.begin());
 for (auto w = start; w l= it; ++w)

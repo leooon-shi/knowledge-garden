@@ -8,9 +8,9 @@ primitives, atomics, and lock-free programming. Day 5 (coroutines) has its own d
 
 > Verified on **g++ 13**, `-std=c++20 -pthread`. Examples that demonstrate data races are
 > labelled as such - build correctness-sensitive code with sanitizers (see the README).
-> Note: on some hardened kernels Threadsanitizer aborts with "unexpected memory mapping";
+> Note: on some hardened kernels ThreadSanitizer aborts with "unexpected memory mapping";
 > if so, either lower ASLR entropy (`sudo sysctl vm.mmap_rnd_bits=28`) or rely on
-> Addresssanitizer + careful review.
+> AddressSanitizer + careful review.
 
 ## Table of Contents
 
@@ -88,8 +88,6 @@ by establishing happens-before, via a mutex or atomics.
 int x = 0;
 std::jthread a([&]{ x = 1; });      // write
 std::jthread b([&]{ int y = x; });  // read  -- UB
-
-
 ```
 
 The fix is either a mutex (§3) or making `x` a `std::atomic<int>` (§4).
@@ -165,14 +163,14 @@ int consumer() {
 
 // counting_semaphore: a permit counter. Great for bounding concurrency.
 std::counting_semaphore<8> slots{4};   // at most 4 holders at once
-slots.acquire();  /* ...use resource...*/ slots.release();
+slots.acquire();  /* ...use resource... */  slots.release();
 
 // binary_semaphore == counting_semaphore<1>; a simple signal.
 std::binary_semaphore signal{0};
 // thread A: signal.acquire();   // blocks until B signals
 // thread B: signal.release();
 
-// latch: one-shot countdown. Threads count_down()); waiters block until it hits 0.
+// latch: one-shot countdown. Threads count_down(); waiters block until it hits 0.
 std::latch done{3};
 // each worker: done.count_down();
 // coordinator: done.wait();
@@ -258,7 +256,7 @@ ready.store(true, std::memory_order_release);  // (2) publishes (1)
 
 // consumer
 while (!ready.load(std::memory_order_acquire)) {}  // (3) waits for (2)
-assert(payload == 42);                            // guaranteed: (1) happens-before here
+assert(payload == 42);                             // guaranteed: (1) happens-before here
 ```
 
 `relaxed` is safe for a pure counter because you only care that increments aren't lost,
@@ -293,11 +291,11 @@ template <typename T, std::size_t Cap>          // Cap must be a power of two
 class SpscRing {
     static_assert((Cap & (Cap - 1)) == 0, "Cap must be a power of two");
     std::array<T, Cap> buf_{};
-    std::atomic<std::size_t> head_(0);           // consumer advances this
-    std::atomic<std::size_t> tail_(0);           // producer advances this
+    std::atomic<std::size_t> head_{0};           // consumer advances this
+    std::atomic<std::size_t> tail_{0};           // producer advances this
 public:
     bool push(const T& v) {                      // producer only
-        auto t = tail.load(std::memory_order_relaxed);
+        auto t = tail_.load(std::memory_order_relaxed);
         auto next = (t + 1) & (Cap - 1);
         if (next == head_.load(std::memory_order_acquire)) return false;  // full
         buf_[t] = v;
@@ -308,7 +306,7 @@ public:
         auto h = head_.load(std::memory_order_relaxed);
         if (h == tail_.load(std::memory_order_acquire)) return std::nullopt; // empty
         T v = buf_[h];
-        head_.store((h + 1) & (Cap - 1), std::memory_order _release);
+        head_.store((h + 1) & (Cap - 1), std::memory_order_release);
         return v;
     }
 };
@@ -385,9 +383,9 @@ Ordered to match the plan's Week 3.
 1. **Producer/consumer queue** (Day 1) - a mutex + `condition_variable` bounded queue. Run
    it under TSan.
 2. **Thread pool** (Day 2) - `std::jthread` workers pulling from a task queue guarded by 
-   `condition_variable`; then rewrite dispatch using a "counting semaphore. Compare with
+   `condition_variable`; then rewrite dispatch using a `counting_semaphore`. Compare with
    the coroutine scheduler in `exercises/`.
-3. **Relaxed vs seq_st counter** (Day 1/3) - increment an atomic from threads with
+3. **Relaxed vs seq_cst counter** (Day 1/3) - increment an atomic from threads with
    `relaxed`, verify the total is still exact; reason about why ordering doesn't matter
    here.
 4. **SPSC ring buffer** (Day 3) - implement the buffer above from scratch; benchmark it

@@ -150,6 +150,7 @@ valid but unspecified state.
 class Example {
     int first;
     int second;
+
 public:
     Example()
         : second(2), first(1) {}

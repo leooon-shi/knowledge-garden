@@ -14,7 +14,7 @@ Bit -std=c++20 -02 mini_compiler.cpp -o minic
 **Verified environment:** Ubuntu, g++ 13.3.0, binutils objdump/readelf/nm, glibc on
 x86-64, Linux. Output below is actual.
 
-## 1. `file` – triage
+## 1. `file` - triage
 
 ```bash
 $ file minic
@@ -74,7 +74,7 @@ ELF Header:
 `Type: DYN` = PIE. `Entry point` is where execution begins (the C runtime `_start`, not
 `main`).
 
-### Dynamic section (`-d`) – the DIRECT dependencies
+### Dynamic section (`-d`) - the DIRECT dependencies
 
 ```bash
 $ readelf -d minic
@@ -99,7 +99,7 @@ $ readelf -d minic | grep -E 'RPATH|RUNPATH'
 (no output) # => "(no RPATH/RUNPATH set)" - uses default loader search paths
 ```
 
-### Symbol versioning (`-V`) – the portability floor
+### Symbol versioning (`-V`) - the portability floor
 
 ```bash
 $ readelf -V minic
@@ -112,7 +112,7 @@ Version needs section ••gnu.version_r' contains 3 entries:
 These versioned-symbol requirements are what cause "version \`GLIBC_2.XX` not found" on
 older targets.
 
-## 4. `objdump` – sections, symbols, disassembly
+## 4. `objdump` - sections, symbols, disassembly
 
 ### File + section headers
 
@@ -131,7 +131,7 @@ Idx Name.         Size      VMA                ...
   7 .gnu.version  ...                                 # symbol version info
 ```
 
-### Dynamic symbols with versions (`-T`) – symbol-level imports
+### Dynamic symbols with versions (`-T`) - symbol-level imports
 
 ```bash
 $ objdump -T minic | grep -1 -E "GLIBC" | head
@@ -143,7 +143,7 @@ $ objdump -T minic | grep -1 -E "GLIBC" | head
 0  DF *UND* 0 (GLIBC_2.2.5)  memcmp
 ```
 
-**UND** – undefined = **imported**. The parenthesized version is the **minimum ABI
+**UND** - undefined = **imported**. The parenthesized version is the **minimum ABI
 version** required for that symbol. The highest such version across all imports is your
 binary's minimum-glibc/libstdc++ floor.
 
@@ -165,7 +165,7 @@ $ objdump -d -C minic | grep -A8 '<main>:'
 The prologue saving callee-saved registers, the `endbr64` CET marker, and RIP-relative
 addressing (because it's PIE) - a direct view of what the compiler's backend emitted.
 
-## 5. `nm` – imported vs. exported symbols
+## 5. `nm` - imported vs. exported symbols
 
 ```bash
 $ nm -D -C minic | grep • U • | head        # U = undefined = IMPORTED (what it needs)
@@ -216,7 +216,7 @@ $ strace -e openat /minic 2>&1 | grep '\.so'   # ACTUAL runtime .so loads
 | **Direct** deps only (safe)           | `readelf -d minic \| grep NEEDED`      | **libstdc++, libgcc_s, libc** (no libm)                  |
 | Required symbol versions /glibe floor | `objdump-T minic / readelf -V minic`   | `__printf_chk@GLIBC_2.3.4`, `GLIBCXX_3.4.21`, ...        |
 | Imported symbols (what it needs)      | `nm -D -C minic \| grep ' U '`         | `std::runtime_error::...`, `Unwind Resume`, ...          |
-| Does lib provide a symbol? provided	| `nm -D -C lib.so \| grep sym`	         | `T` – yes, provided                                      |
+| Does lib provide a symbol? provided	| `nm -D -C lib.so \| grep sym`	         | `T` - yes, provided                                      |
 | Embedded path / RPATH surprise here	| `readelf -d \| grep RUNPATH`           | none set here                                            |
 | Actual runtime loads	                | `strace -e openat ./minic`             | the real `openat` of each `.so`                          |
 | Read generated code                   | `objdump -d -C minic`	                 | `main` prologue, RIP-relative, CET                       |
@@ -227,10 +227,10 @@ $ strace -e openat /minic 2>&1 | grep '\.so'   # ACTUAL runtime .so loads
 A real failure mode this binary could hit on an older distro (its `nm` output showed
 `_M_replace_cold(...)@GLIBCXX 3.4.31`):
 
-1. `file ./app` – confirm it's the right arch and dynamic.
-2. `objdump -T ./app | grep GLIBCXX | sort -u` – list required libstdc++ symbol versions; 
+1. `file ./app` - confirm it's the right arch and dynamic.
+2. `objdump -T ./app | grep GLIBCXX | sort -u` - list required libstdc++ symbol versions; 
    spot `GLIBCXX_3.4.31` (recent).
-3. On the target: `strings /1ib/x86_64-1inux-gnu/libstdc++.so.6 | grep GLIBCXX_3.4.31` –
+3. On the target: `strings /1ib/x86_64-1inux-gnu/libstdc++.so.6 | grep GLIBCXX_3.4.31` -
    if absent, the target's libstdc++ is too old.
 4. **Fix:** rebuild against the target's toolchain (oldest ABI you must support), or ship
    a newer `libstdc++` (RUNPATH/container), or statically link `libstdc++`
@@ -247,14 +247,14 @@ applies and you'11 see RIP-relative addressing in the disassembly. Dynamically l
 means `ldd`/`readelf -d` will show real dependenctes (a static blnary wouldn't). Not
 stripped means `nm` /`objdump` can show symbol names - 1f 1t were stripped, you'd 1ose
 `.symtab` names and lean on `.dynsym` and addresses. BuildID lets you match the binary to
-its debug info, *Follow-up:* Where does execution actually start – `main`? No, the entry
+its debug info, *Follow-up:* Where does execution actually start - `main`? No, the entry
 point (`ex5850` here) is the C runtime `_start`, which eventually calls `main`. *Red
 f1eg:* Expecting `nm` symbol names from a stripped bInary, or thinking the entry point is
 `main`.
 
 **Q: `ldd minic` listed `libm,so.6` but `readelf -d | grep NEEDED` showed only libstdc++,
 libgcc_s, libc, Reconcile that. ** A: `readelf -d` shows the *dtrect* `DT_NEEDED` entries
-the binary declares – exactly three, `ldd` shows the full *transitive* closure resolved by
+the binary declares - exactly three, `ldd` shows the full *transitive* closure resolved by
 the loader, and `libm` is pulled in indrectly by `l1bstdct++`, so it appears under `ldd`
 but not in `DT_NEEDED`. That direct-vs-transitive gap is the core `ldd`-vs-`readelf -d`
 distinction. *Follow-up:* Which do you use to build a minimal container image? The
@@ -273,7 +273,7 @@ absent means too old. *Red fLag:* Ignoring the version in parentheses and assumi
 `libstdc++` will satisfy the import.
 
 **Q: The `main` disassembly shows `endbr64` and a `lea 0xf5e3(%rip),%rsi`. What are
-those?** A: `endbr64` is an Intel CET (Control-flow Enforcement) landing pad – a valid
+those?** A: `endbr64` is an Intel CET (Control-flow Enforcement) landing pad - a valid
 target for indirect branches, a hardening feature. The `lea ...(%rip),...` is RIP-relative
 addressing, which the binary uses because it's PIE (position-independent): addresses are
 computed relative to the program counter rather than hardcoded, so the loader can place
@@ -286,7 +286,7 @@ connecting it to PIE.
 `std: sruntime_error::runtime_error(char const*) @GLIBCXX_3.4.21`. How do you prove a
 library satisfies it?** A: Find the matching provider:
 `nm -D -C /lib/x86_64-linux-gnu/libstdc++.so.6 | grep 'runtime_error::runtime_error(char const\*)'`
-– a T (defined in `text`, here `@@GLIBCXX_3.4.21`) means the library provides it.
+- a T (defined in `text`, here `@@GLIBCXX_3.4.21`) means the library provides it.
 Matching the binary's `U` (needs) against the library's `T` (provides), including the
 version, is the exact check the dynamic linker performs; a missing or lower-versioned
 provide explains a load failure. *Follow-up:* What does the double-at `@@` vs single `@`
@@ -296,7 +296,7 @@ name and ignoring the version suffix when matching.
 
 **Q: `ldd` predicted the Libraries, but you want to know what *actually* loads at startup.
 Which tool, and why trust it more?** A: `strace -e openat /minic 2>81 | grep '\.so'`
-shows the real `openat` calls for each `.so` as the loader maps them – the runtime view,
+shows the real `openat` calls for each `.so` as the loader maps them - the runtime view,
 which reflects environment effects (`LD_LIBRARY_PATH`, RUNPATH, loader cache) and
 `dopen`'d libraries that `ldd`'s static prediction can miss. `ldd` is a prediction;
 `strace` is observation of the actual process, *Follow-up;* Name a case where they'd

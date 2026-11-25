@@ -99,7 +99,7 @@ The learner should understand:
 9.    What does a function's return type describe?
 10.     Why should ownership of LLVM objects be handled carefully?
 ## Practical task
-Write a Ct+ program using the LLV C++ API that creates a function equivalent to:
+Write a C++ program using the LLV C++ API that creates a function equivalent to:
 •**cpp
 int add (int a, int b) {
 return a + b;

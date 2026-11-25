@@ -12,7 +12,7 @@ There is no coroutine keyword. A function *is* a coroutine if its body contains 
 - `co_return expr` (or bare `co_return`)
 
 Everything else follows from that. The compiler sees one of those three, and rewrites the
-function into a state machine. Nothing in the signature says so – `Task<int> f()` and
+function into a state machine. Nothing in the signature says so - `Task<int> f()` and
 `int g()` look equally ordinary at the declaration site, which is the first thing that
 makes this topic confusing.
 
@@ -29,7 +29,7 @@ Restrictions, all of them consequences of the rewrite:
 | Keyword       | Meaning                                             | Requires from the promise                           |
 | ------------- | --------------------------------------------------- | --------------------------------------------------- |
 | `co_await a`  | Suspend until `a` is ready, then produce its result | Nothing directly (may go through `await_transform`) |
-| `co_yield v`  | Produce an intermediate value and suspend           | `yield value(v)`                                    |
+| `co_yield v`  | Produce an intermediate value and suspend           | `yield_value(v)`                                    |
 | `co_return v` | Finish, producing a final value                     | `return_value(v)` or `return_void()`                |
 
 `co_yield v` is not a separate mechanian: it is defined as
@@ -41,25 +41,25 @@ Restrictions, all of them consequences of the rewrite:
 This is the single biggest source of confusion, so it is worth naming the parts before any
 code:
 
-- **Return object** – what the caller gets. `Task<int>`, `Generator<int>`. You write this
+- **Return object** - what the caller gets. `Task<int>`, `Generator<int>`. You write this
   type. It is usually a thin handle wrapper.
-- **promise type** – the compiler's control panel, found via
-  `std::coroutine_traits<Returntype, Args...>::promise_type`, in practice 
-  `ReturnType::promise type`. You write this too. It is *not* `std::promise` and has
+- **promise type** - the compiler's control panel, found via
+  `std::coroutine_traits<ReturnType, Args...>::promise_type`, in practice 
+  `ReturnType::promise_type`. You write this too. It is *not* `std::promise` and has
   nothing to do with futures.
-- **Coroutine handle** – `std::coroutine_handle<Promise>`, a non-owning pointer-sized
+- **Coroutine handle** - `std::coroutine_handle<Promise>`, a non-owning pointer-sized
   token used to resume or destroy the coroutine. Copying it copies a pointer, not the
   coroutine.
 
-A fourth participant is not a tvpe vou declare:
+A fourth participant is not a type you declare:
 
-- **Coroutine frame** – the heap (usually) allocation holding parameters, locals that live
+- **Coroutine frame** - the heap (usually) allocation holding parameters, locals that live
   across a suspend point, the promise object, and the resume/destroy pointers. This is the
   object whose lifecycle the rest of this document is about.
 
 ```cpp
 Task<int> example() {          // Task<int>          = return object
-    int x= co_await other();   // Task<int>::promise_type = promise
+    int x = co_await other();  // Task<int>::promise_type = promise
     co_return x + 1;
 }                              // frame holds x, the promise, and the state index
 ```
@@ -76,17 +76,17 @@ Everything needed for a coroutine that runs eagerly and yields nothing:
 struct Task {
     struct promise_type {
         Task get_return_object() { return Task{std::coroutine_handle<promise_type>::from_promise(*this)}; }
-        std::suspend_never initial_suspend() noexcept { return {}; }    // start eagerly
-        std::suspend_always final_suspend() noexcept { return {}; }    // stay alive after finishing
-        void return_void noexcept {}
+        std::suspend_never  initial_suspend() noexcept { return {}; }    // start eagerly
+        std::suspend_always final_suspend()   noexcept { return {}; }    // stay alive after finishing
+        void return_void() noexcept {}
         void unhandled_exception() { std::terminate(); }
     };
 
-    explicit Task(std::coroutine_handlespromise_type> h): h_(h) {}
+    explicit Task(std::coroutine_handlespromise_type> h) : h_(h) {}
     Task(const Task&)            = delete;
     Task& operator=(const Task&) = delete;
-    Task (Task&& other) noexcept : h_(std::exchange(other.h_, {})) {}
-    ~Task() { if (h_) h_.destroy(); }               // we chose suspend_always, so we must clean up
+    Task(Task&& other) noexcept : h_(std::exchange(other.h_, {})) {}
+    ~Task() { if (h_) h_.destroy(); }            // we chose suspend_always, so we must clean up
 
     std::coroutine_handle<promise_type> h_;
 };
@@ -119,10 +119,10 @@ the compiler produces, conceptually:
 
 ```cpp
 Task<int> f(int arg) {
-    //---- ramp function: runs synchronously on the initial call ----
-    frame* F = operator new(sizeof (frame));       // 1. allocate (elidable, see 2.4)
+    // ---- ramp function: runs synchronously on the initial call ----
+    frame* F = operator new(sizeof(frame));        // 1. allocate (elidable, see 2.4)
     F->arg = arg;                                  // 2. copy/move parameters into the frame
-    new (&F->promise) promisetype{};               // 3. construct the promise
+    new (&F->promise) promise_type{};              // 3. construct the promise
     auto ret = F->promise.get_return_object();     // 4. make the return object - BEFORE any body runs
 
     try {
@@ -132,14 +132,14 @@ Task<int> f(int arg) {
         int v = co_await something();
         F->promise.return_value(v + F->arg);
     } catch (...) {
-        F-promise. unhandled_exception():           // 6. only for exceptions from the body
+        F->promise.unhandled_exception();          // 6. only for exceptions from the body
     }
 
 final_suspend_label:
     // 7. all locals destroyed, then:
-    co_await F->promise. final_suspend();           // must be noexcept
+    co_await F->promise.final_suspend();           // must be noexcept
     // 8. promise destroyed, parameters destroyed, frame freed - unless final_suspend suspended
-    return ret;                                     // 9. returned at the FIRST suspension, not here
+    return ret;                                    // 9. returned at the FIRST suspension, not here
 }
 ```
 
@@ -169,17 +169,17 @@ auto&& awaiter = operator co_await(awaitable);      // or: awaitable
 if (!awaiter.await_ready()) {                       // fast path: skip suspension entirely
     // --- suspend: locals and the resume point are already stored in the frame ---
     using handle = std::coroutine_handle<promise_type>;
-    auto h = handle:: from_promise(promise);
+    auto h = handle::from_promise(promise);
 
     // await_suspend may return void, bool, or another coroutine_handle
-    if constexpr (std::is_void_v<decltype(awaiter. await_suspend(h))>) {
+    if constexpr (std::is_void_v<decltype(awaiter.await_suspend(h))>) {
         awaiter.await_suspend(h); 
-        return_to_caller();                           // unconditional suspend
-    } else if constexpr (std::is_same_v<decitype(awaiter.await_suspend(h)), bool>) {
+        return_to_caller();                          // unconditional suspend
+    } else if constexpr (std::is_same_v<decltype(awaiter.await_suspend(h)), bool>) {
         if (awaiter.await_suspend(h)) return_to_caller();   // true = stay suspended
         // false = resume immediately, do not return to caller
     } else {
-        awaiter.await_suspend(h).resume();           // symmetric transfer: tail call
+        awaiter.await_suspend(h).resume();          // symmetric transfer: tail call
     }
 resume_point:
     ;
@@ -190,7 +190,7 @@ return awaiter.await_resume();                      // the value of the co_await
 The critical safety rule follows from where `await_suspend` sits: by the time it is
 called, the coroutine is *fully suspended*, so the handle may be published to another
 thread. But that means the coroutine maybe resumed - and may complete and destroy its own
-frame – before `await_suspend` returns. Therefore:
+frame - before `await_suspend` returns. Therefore:
 
 - After publishing the handle, `await_suspend` must not touch `*this` or the frame.
 - Returning `void` after publishing is a race; the compiler still executes the return
@@ -200,31 +200,31 @@ frame – before `await_suspend` returns. Therefore:
 // WRONG: 'this' may be a dangling pointer after enqueue()
 void await_suspend(std::coroutine_handle<> h) {
     scheduler.enqueue(h);
-    log(value_);          // value Lives in the awaiter, which may be on a destroyed frame
+    log(value_);          // value_ lives in the awaiter, which may be on a destroyed frame
 }
 
 // RIGHT: read everything needed before publishing
 void awaitsuspend(std::coroutine_handle<> h) {
-    auto copy = value;
-    log(copy) ;
-    scheduler.enqueue(h);       // last statement
+    auto copy = value_;
+    log(copy);
+    scheduler.enqueue(h);     // last statement
 }
 ```
 
 **2.3 What `co_yield` and `co_return` expand to**
 
 ```cpp
-co_yield v;   // ==> co_await promise.yield_value(v);
+co_yield v;   //  ==> co_await promise.yield_value(v);
 
-co_return;    // ==＞ promise. return void(); goto final suspend label;
-co_return v;  // ==＞ promise. return_value(v); goto final suspend label;
+co_return;    //  ==＞ promise. return void(); goto final suspend label;
+co_return v;  //  ==＞ promise. return_value(v); goto final suspend label;
 ```
 
 `yield_value` typically returns `std::suspend_always` and stashes the value where the
 consumer can read it:
 
 ```cpp
-struct promise type {
+struct promise_type {
     T* current_;
     std::suspend_always yield_value(T& value) noexcept {
         current_ = std::addressof(value);      // store a pointer: no copy, valid while suspended
@@ -234,7 +234,7 @@ struct promise type {
 ```
 
 Storing a pointer rather than a copy is safe here precisely because the producer is
-suspended – the yielded object lives in the producer's frame and cannot change until the
+suspended - the yielded object lives in the producer's frame and cannot change until the
 consumer resumes it.
 
 Falling off the end of the body is equivalent to `co_return;`, and therefore requires
@@ -246,7 +246,7 @@ something, which is a useful way to make "forgot to return" a compile error.
 The frame holds:
 
 - the promise object,
-- copies of the parameters (by value – see 3.3),
+- copies of the parameters (by value - see 3.3),
 - every local whose lifetime crosses a suspend point,
 - every temporary whose lifetime crosses a suspend point,
 - the resume and destroy function pointers (or an index plus a jump table),
@@ -261,11 +261,11 @@ Two customisation points matter:
 ```cpp
 struct promise_type {
     // Custom allocation; the coroutine's arguments are also passed, so you can use an allocator argument
-    void operator new(std::size_t n) {return my_pool.allocate(n); }
-    void operator delete(void* p, std::size_t n) noexcept { my_pool.deallocate(p, n); }
+    void* operator new(std::size_t n) {return my_pool.allocate(n); }
+    void  operator delete(void* p, std::size_t n) noexcept { my_pool.deallocate(p, n); }
 
     // If present, allocation failure returns this instead of throwing
-    static Task get_return_object_on_allocation_failure() { return Task(nullptr); }
+    static Task get_return_object_on_allocation_failure() { return Task{nullptr}; }
 };
 ```
 
@@ -273,7 +273,7 @@ The last one changes the allocation to the `nothrow` form, which is how you writ
 coroutine usable in a no-exceptions build.
 
 **Halo: heap allocation elision.** The standard permits the compiler to omit the
-allocation entirely when the frame's lifetime is strictly nested within the caller's – the
+allocation entirely when the frame's lifetime is strictly nested within the caller's - the
 optimisation is called HALO (Heap Allocation eLision Optimisation). It requires the
 compiler to see, after inlining, that the coroutine is destroyed before the caller
 returns. In practice this means:
@@ -296,13 +296,13 @@ I think it is?"
 
 A frame is in exactly one of these states:
 
-| State                                | `done()` | `resume()`               | `destroy()`                          |
+| State                                | `done()` | `resume()`               | `destroy()`                           |
 | ------------------------------------ | -------- | ------------------------ | ------------------------------------- |
-| Suspended at initial suppend point   | `false`  | starts the body          | OK, destroys parameters + promise     |
+| Suspended at initial suspend point   | `false`  | starts the body          | OK, destroys parameters + promise     |
 | Suspended at a `co_await`/`co_yield` | `false`  | continues the body       | OK, destroys live locals too          |
 | Suspended at final suspend point     | `true`   | **UB**                   | OK, and *required* - nobody else will |
 | Running                              | -        | **UB** (already running) | **UB**                                |
-| Destroyed / never allocated          | -        | **UB**                   | **UB**                                |
+| Destroyed / never allocated          | -        | UB                       | UB                                    |
 
 `done()` may only be called on a suspended coroutine, and it answers exactly one question:
 "are we at the final suspend point?" It is not "has the body finished executing" in any
@@ -317,7 +317,7 @@ looser sense, and calling it on a running coroutine is undefined.
   [1] allocate frame                     <-- operator new (or elided)
   [2] copy/move parameters into frame    <-- BY VALUE, always
   [3] construct promise object           <-- promise_type{} or promise_type{args...}
-  [4] promise. get_return_object()       <-- return object created here, kept in the frame's ramp
+  [4] promise.get_return_object()        <-- return object created here, kept in the frame's ramp
   [5] co_await promise.initial_suspend()
         |
         +-- suspend_always: return to caller now, body has not run
@@ -330,21 +330,21 @@ looser sense, and calling it on a running coroutine is undefined.
         +-- each resumption: control re-enters at the stored index
         |
         v
-  [7] co_return (or falling off the end)
+  [7] co_return  (or falling off the end)
         |
         +-- promise.return_value(v) / return_void()
         |
         v
-  [8] destroy all locals in scope        <-- reverse order of tonstruction
+  [8] destroy all locals in scope        <-- reverse order of construction
   [9] co_await promise.final_suspend()   <-- must be noexcept
         |
-        +-- suspend_never: fall through to [10] automatically
+        +-- suspend_never:  fall through to [10] automatically
         +-- suspend_always: STOP. frame still alive. someone must call destroy()
         |
         v
-  [10] destroy promise object
-  [11] destroy parameter copies
-  [12] free frame                         <-- operator delete
+ [10] destroy promise object
+ [11] destroy parameter copies
+ [12] free frame                         <-- operator delete
 ```
 
 The most important branch is at step 9, covered next.
@@ -352,8 +352,8 @@ The most important branch is at step 9, covered next.
 **3.3 `initial_suspend`: eager vs lazy**
 
 ```cpp
-std::suspend_never  initial_suspend();    // eager: body starts before the caller gets the return object
-std::suspend_always initial_suspend();    // lazy: body starts on the first explicit resume()
+std::suspend_never  initial_suspend();   // eager: body starts before the caller gets the return object
+std::suspend_always initial_suspend();   // lazy: body starts on the first explicit resume()
 ```
 
 Lazy (`suspend_always`) is the right default for a task type. It means:
@@ -361,7 +361,7 @@ Lazy (`suspend_always`) is the right default for a task type. It means:
 - Nothing runs until someone awaits or resumes the task, so the caller controls when and
   on which thread work begins.
 - The return object is fully constructed before any body code can observe it.
-- A discarded task does no work – with an eager coroutine, `f();` runs the body and then
+- A discarded task does no work - with an eager coroutine, `f();` runs the body and then
   leaks or detaches.
 
 Eager (`suspend_never`) suits fire-and-forget or already-running work, but note that the
@@ -381,7 +381,7 @@ This is the single most consequential design choice.
   Suitable only for coroutines whose result is delivered by side effect (callbacks,
   channels, detached work).
 
-`final_suspend()` returning `std::suspend_always` – the usual choice:
+`final_suspend()` returning `std::suspend_always` - the usual choice:
 
 - The frame stays alive after completion, so the promise (and the result or exception
   stored in it) is still readable.
@@ -403,19 +403,19 @@ reference*, not the referent. So a coroutine that takes a reference to a tempora
 dangling-reference bug the moment it suspends:
 
 ```cpp
-Task<void> use(const std::string& s) {    //s is a reference stored in the frame
+Task<void> use(const std::string& s) {       // s is a reference stored in the frame
     co_await something();
-    std::cout << s;    // DANGLING if the caller's temporary is gone
+    std::cout << s;                          // DANGLING if the caller's temporary is gone
 }
 
-use(std::string{"temp"});     // temporary dies at the end of the full-expression, coroutine suspends before that
+use(std::string{"temp"});    // temporary dies at the end of the full-expression, coroutine suspends before that
 ```
 
-The same applies to the implicit 'this of a coroutine member function, and – more subtly
-– to lambda coroutines, whose captures live in the closure object, not the frame:
+The same applies to the implicit `this` of a coroutine member function, and - more subtly
+- to lambda coroutines, whose captures live in the closure object, not the frame:
 
 ```cpp
-auto lambda = [x = 42]() -> Task<int> { co_return x; }    // closure lives as long as 'lambda'
+auto lambda = [x = 42]() -> Task<int> { co_return x; };   // closure lives as long as 'lambda'
 auto bad = [x = 42]() -> Task<int> { co_return x; }();    // closure is a temporary: dangling on first suspend
 ```
 
@@ -430,9 +430,9 @@ Rules that avoid all of this:
 
 **3.6 What `destroy()` actually does**
 
-`destroy()` runs the destructors of everything currently alive in the frame – locals in
+`destroy()` runs the destructors of everything currently alive in the frame - locals in
 scope at the current suspend point, in reverse order, then the promise, then the parameter
-copies – and frees the frame. It does *not* resume the coroutine, so:
+copies - and frees the frame. It does *not* resume the coroutine, so:
 
 - Code after a `co_await` never runs. Cleanup written as ordinary statements after an
   await is skipped.
@@ -443,9 +443,9 @@ coroutine equivalent of "don't rely on code after a `throw`".
 
 ```cpp
 Task<void> f() {
-    auto guard = ScopeGuard{[] { release(); }};        // runs even if destroy() is called mid-flight
+    auto guard = ScopeGuard{[] { release(); }};    // runs even if destroy() is called mid-flight
     co_await something();
-    release();                                        // NOT run if the coroutine is destroyed while suspended
+    release();                                     // NOT run if the coroutine is destroyed while suspended
 }
 ```
 
@@ -462,7 +462,7 @@ co_return v  -->  promise.return_value(v)  -->  locals destroyed  -->  final_sus
                                                                               |
                                                           frame alive, done() == true, result readable
                                                                               |
-                                                            Task::~Task() --> h.destroy()
+                                                          Task::~Task()  -->  h.destroy()
 ```
 
 The window is bounded and it has a designated owner. Freeing the frame at `co_return`
@@ -476,8 +476,8 @@ a distinct failure, and it can happen in every frame state:
 | State when the last handle is dropped                           | Frame leaked |
 | --------------------------------------------------------------- | ------------ |
 | Lazy, body never started                                        | yes          |
-| suspended at an inner `co_await`                                | yes          |
-| CompLeted, parked at final suspend                              | yes          |
+| Suspended at an inner `co_await`                                | yes          |
+| Completed, parked at final suspend                              | yes          |
 | Suspended, handle retained in a container that is never drained | yes          |
 
 The first row surprises people: a coroutine whose body **never ran at all** still leaks,
@@ -487,10 +487,10 @@ no-op.
 
 The third row is the one that gets mislabelled. The frame surviving `done() == true` is
 correct and intended; nothing ever destroying it afterwards is the bug. The symptom and
-the design look identical at a single point in time – the difference is only visible in
+the design look identical at a single point in time - the difference is only visible in
 whether an owner exists.
 
-So the rule from 3.4 it the whole story: **exactly one owner, exactly one `destroy()`.**
+So the rule from 3.4 is the whole story: **exactly one owner, exactly one `destroy()`.**
 What makes coroutines unusually leak-prone is not the deferral, it is that
 `coroutine_handle` is non-owning and trivially copyable, so the compiler enforces nothing.
 There is no `unique_ptr`-like type in the standard for frames; if you want one, the return
@@ -504,14 +504,14 @@ completely invisible.
 
 ```cpp
 // Same un-destroyed frame in both cases, opposite verdicts: 
-std::coroutine_handle<> holder[4];              // .bss, alive at exit   --> No leak reported
-std::vector<std::coroutine_handle<>> holder;    // dtor frees buffer     --> leak IS reported
+std::coroutine_handle<> holder[4];              // .bss, alive at exit  --> NO leak reported
+std::vector<std::coroutine_handle<>> holder;    // dtor frees buffer    --> leak IS reported
 ```
 
-This is not an Asan detect - the trame genuinely is still reachable in the first case. But
+This is not an ASan detect - the trame genuinely is still reachable in the first case. But
 it means the failure mode that matters most in real systems is the one tooling misses: a
 scheduler that parks handles in a long-lived global queue and never drains it on shutdown
-accumulates frames without bound, and a clean ASan run proves nothing about it.    
+accumulates frames without bound, and a clean ASan run proves nothing about it.
 
 The reliable detector is to count in the promise, where the frame allocation actually
 happens:
@@ -521,7 +521,7 @@ struct promise_type {
     static std::atomic<int> live_frames;
 
     void* operator new(std::size_t n) { live_frames.fetch_add(1, std::memory_order_relaxed); return ::operator new(n); }
-    void operator delete(void*p) noexcept { live_frames.fetch_sub(1, std::memory_order_relaxed); ::operator delete(p); }
+    void  operator delete(void*p) noexcept { live_frames.fetch_sub(1, std::memory_order_relaxed); ::operator delete(p); }
     // ... rest of the promise
 };
 
@@ -529,7 +529,7 @@ struct promise_type {
 assert(promise_type::live_frames.load() == 0);
 ```
 
-This counts what you care about – frames created versus frames destroyed - independently
+This counts what you care about - frames created versus frames destroyed - independently
 of reachability, and it works in a build with no sanitiser at all. Section 10 turns it
 into a procedure.
 
@@ -541,15 +541,15 @@ coroutine, it asks the promise.
 
 **4.1 Required and optional members**
 
-Required – omitting any is a compile error:
+Required - omitting any is a compile error:
 
 ```cpp
 struct promise_type {
-    T get_return_object();
-    Awaitable initial_suspend():
+    T    get_return_object();
+    Awaitable initial_suspend();
     Awaitable final_suspend() noexcept;
-    void unhandled_exception():
-    void return_void();    // and/or return_value(T), see 2.3
+    void unhandled_exception();
+    void return_void();         // and/or return_value(T), see 2.3
 };
 ```
 
@@ -561,7 +561,7 @@ Optional, each enabling a feature:
 | `yield_value(T)`                            | `co_yield v`                              |
 | `await_transform(T)`                        | Intercepting every `co_await` in the body |
 | `operator new` / `operator delete`          | Custom frame allocation                   |
-| `get_return_object_on allocation_failure()` | Non-throwing allocation                   |
+| `get_return_object_on_allocation_failure()` | Non-throwing allocation                   |
 
 **4.2 Construction: the promise can see the arguments**
 
@@ -572,11 +572,11 @@ is passed first.
 ```cpp
 struct promise_type {
     Allocator* alloc_;
-    promise_type(Allocator& a, int /*other args*/) : alloc_(&a) {}    // sees the coroutine's args
+    promise_type(Allocator& a, int /*other args*/) : alloc_(&a) {}   // sees the coroutine's args
     // ...
 };
 
-Task<int> work(Allocator& a, int n);    // promise gets (a, n)
+Task<int> work(Allocator& a, int n);   // promise gets (a, n)
 ```
 
 Overload resolution here is a common source of confusion: if the constructor is not viable
@@ -586,27 +586,27 @@ coroutine types, which pair it with `operator new(std::size_t, Allocator&, Args.
 
 **4.3 `get_return_object` and the ordering trap**
 
-`get return_object()` is called before `initial_suspend()`, so it cannot observe anything
+`get_return_object()` is called before `initial_suspend()`, so it cannot observe anything
 the body does. It typically does one of two things:
 
 ```cpp
 // (a) Build the handle from the promise - the common case
 Task get_return_object() {
-    return Task{std::coroutine_handle<promise_type>::from_promise(*this)}:
+    return Task{std::coroutine_handle<promise_type>::from_promise(*this)};
 }
 
 // (b) Return something convertible, deferring construction
-struct promise_type { std::suspend_always get_return_object() { return {}; } };   // rare
+struct promise_type { std::suspend_always get_return_object() { return {}; } };  // rare
 ```
 
 `from_promise(*this)` is the inverse of `handle.promise()`: given the promise's address,
 it recovers the frame address. Both are constant-time pointer arithmetic with no lookup,
-and both require that the promise really is the one embedded in a frame – calling
+and both require that the promise really is the one embedded in a frame - calling
 `from_promise` on a standalone `promise_type` object is undefined.
 
 One ordering subtlety worth internalising: the object returned by `get_return_object` is
 converted to the coroutine's declared return type at the point of the `return` in the ramp
-function – that is, at the *first suspension*, not at step 4. If the return type differs
+function - that is, at the *first suspension*, not at step 4. If the return type differs
 from `get_return_object`'s type, that conversion is sequenced after the body has begun
 (for eager coroutines). Keeping the two types identical avoids the whole question.
 
@@ -618,10 +618,10 @@ the result belongs. The idiomatic storage is a variant:
 ```cpp
 #include <variant>
 
-template <typename T> 
+template <typename T>
 struct promise_type {
     std::variant<std::monostate, T, std::exception_ptr> result_;
-    
+
     void return_value(T v) { result_.template emplace<1>(std::move(v)); }
     void unhandled_exception() noexcept { result_.template emplace<2>(std::current_exception()); }
 
@@ -637,7 +637,7 @@ Notes on this pattern:
 - `unhandled_exception` is called *inside* the catch block of the ramp, so
   `std::current_exception()` is valid there and only there.
 - It may itself rethrow, in which case the exception propagates out of `resume()` to
-  whoever resumed the coroutine. This is a legitimate design – but the frame is then
+  whoever resumed the coroutine. This is a legitimate design - but the frame is then
   already at the final suspend point, so ownership rules still apply.
 - `unhandled_exception` never sees exceptions thrown by `get_return_object`,
   `initial_suspend`'s ramp portion, or `final_suspend`.
@@ -646,11 +646,11 @@ Notes on this pattern:
 
 `await_transform` is applied to every operand of `co_await` in the body. Two main uses.
 
-Restricting the vocabulary – make awaiting the wrong type a compile error:
+Restricting the vocabulary - make awaiting the wrong type a compile error:
 
 ```cpp
 struct promise_type {
-    // only our own Task type may be awaited
+    // Only our own Task type may be awaited
     template <typename T>
     auto await_transform(Task<T>&& t) { return TaskAwaiter<T>{std::move(t)}; }
 
@@ -739,7 +739,7 @@ counting; if you need shared ownership, put a refcount in the promise.
 **5.3 Symmetric transfer and stack growth**
 
 Returning a handle from `await_suspend` means "suspend me and resume *that* one", and the
-standard requires it be performed as a tail call – the current frame's resume function
+standard requires it be performed as a tail call - the current frame's resume function
 returns before the next one starts:
 
 ```cpp
@@ -773,7 +773,7 @@ assert(h.address() == h2. address());
 
 This pair is how awaiters reach the promise of the coroutine that is awaiting them, and
 how a promise reaches its own handle inside `get_return_object`. It only works for the
-exact promise type - there is no derived-to-base conversion, so `coroutine_handle<Base>`
+exact promise_type - there is no derived-to-base conversion, so `coroutine_handle<Base>`
 from a `Derived` promise is undefined even when the inheritance is real.
 
 ## 6. Lifecycle of awaitables and awaiters
@@ -1022,7 +1022,7 @@ Points where this differs from the task in 6.4, and why:
   because control always returns to the same place.
 - **`begin()` resumes once.** A lazy generator has produced nothing until then, so
   `begin()` must advance to the first value. That makes `begin()` non-const and
-  single-pass – hence `input_iterator_tag`.
+  single-pass - hence `input_iterator_tag`.
 - **Values are borrowed.** `current_` points into the producer's frame. valid only while
   the producer is suspended, which is exactly when the consumer is running. Copying out is
   the consumer's choice, not a cost the generator imposes.
@@ -1057,7 +1057,7 @@ struct ResumeOn {
 Consequences that bite in practice:
 
 - Thread-Local state read before an await may be wrong after it. Re-read, don't cache.
-- A `std::lock_guard` held across a `co_await` may be unlocked by a *different* thread –
+- A `std::lock_guard` held across a `co_await` may be unlocked by a *different* thread -
   undefined for `std::mutex`. Never hold a standard mutex across a suspend point; use an
   awaitable async mutex, or restructure so the critical section contains no awaits.
 - The frame is not synchronised. If two threads may touch a frame, the handoff itself must
@@ -1089,7 +1089,7 @@ The state machine is what the debugger sees, so expect:
 - Stepping through a `co_await` jumps to the caller, not the next line. Set a breakpoint
   after the await instead of stepping.
 - Stack traces show the resumer, not the logical awaiting chain. The `continuation_` chain
-  in the promise *is* the logical stack – printing it is the usual workaround, and a
+  in the promise *is* the logical stack - printing it is the usual workaround, and a
   reason to store a debug label in the promise.
 - Locals may appear optimised out if they do not cross a suspend point, because they never
   reached the frame.
@@ -1244,7 +1244,7 @@ that a non-detached version would use.
   `promise.return_value(v)` plus a jump to final suspend.
 - The return object is created **before** the body runs; it reaches the caller at the
   **first suspension**.
-- `co_await` is three calls - `await_ready`, `await_suspend`, `await_resume` – reached via
+- `co_await` is three calls - `await_ready`, `await_suspend`, `await_resume` - reached via
   `await_transform` and then `operator co_await`.
 - In `await_suspend` the coroutine is already fully suspended: once the handle is
   published, the frame may be gone. Publish last.
@@ -1259,7 +1259,7 @@ that a non-detached version would use.
 - `destroy()` runs destructors but does not resume: cleanup goes in destructors, never
   after an await.
 - A frame alive after `done()` is the **design**, not a leak. A frame with **no owner** is
-  the leak – in any state, including one whose body never ran.
+  the leak - in any state, including one whose body never ran.
 - ASan leak detection is reachability-based, so a retained handle hides a frame leak
   completely. Count frames in `promise_type::operator new`/`delete` instead.
 - No implicit threading, no built-in cancellation. Both are library concerns you must
@@ -1279,7 +1279,7 @@ that a non-detached version would use.
 1. Use `std::generator<T>` (C++23) for synchronous sequences.
 2. Use an existing library - cppcoro, libunifex, stdexec, Boost.Cobalt, asio's `awaitable`
    - for async tasks.
-3. Write your own promise type only to learn, or when no library fits. The task in 6.4 is
+3. Write your own promise_type only to learn, or when no library fits. The task in 6.4 is
    a correct starting point, but production types also need cancellation, allocator
    support, and scheduler affinity.
 4. Reach for coroutines at all only when the problem is genuinely suspend/resume shaped:
@@ -1320,7 +1320,7 @@ the `Task` moved-from and discarded is a leak.
 
 **10.2 Step 1 - instrument the promise**
 
-This is the primary tool, not the fallback. Add a counting base to the promise type and
+This is the primary tool, not the fallback. Add a counting base to the promise_type and
 inherit it:
 
 ```cpp
@@ -1354,7 +1354,7 @@ assert(FrameCounter:: live.load() == 0);
 Why this comes first:
 
 - It counts frames created versus destroyed, which is exactly the ownership question from
-  10.1 – not reachability.
+  10.1 - not reachability.
 - It works with no sanitiser, in release builds, and in production behind a flag.
 - `created` versus `live` distinguishes "leaking steadily" from "leaked once at startup",
   which is the difference between a hot-path ownership bug and a one-off.
@@ -1370,7 +1370,7 @@ tells you much less than one you can compare against total creations.
 gt+ -std=c++20 -g -fsanitize=address,undefined -Wall -Wextra coro.cpp -o coro && ./coro
 ```
 
-ASan gives you a stack trace to the *allocation*, which names the coroutine function –
+ASan gives you a stack trace to the *allocation*, which names the coroutine function -
 this is its real value, and the counter cannot provide it:
 
 ```text
@@ -1528,10 +1528,10 @@ under `-Wall -wextra-pedantic` and under ASan + UBSan with no leaks reported.
 
 Two of the printed lines are worth reading rather than skimming:
 
-- `4.5 scheduler id -1` – the promise's `sched_` was never set, which is the honest
+- `4.5 scheduler id -1` - the promise's `sched_` was never set, which is the honest
   result. The point of the snippet is that `await_transform` delivers promise state into
   the body, not that a scheduler exists.
-- `8.4 frame 296 bytes` – a 256-byte local crossing one suspend point, plus promise and
+- `8.4 frame 296 bytes` - a 256-byte local crossing one suspend point, plus promise and
   bookkeeping. The exact number is compiler- and flag-specific; treat it as a measurement
   technique, not a constant.
 

@@ -25,8 +25,8 @@ files. An ELF has:
   tables, and relocation info.
 
 The analysis tools are just different *views* into this structure. Understanding the three
-questions they answer – **what is this file? what does it depend on? what symbols does it
-import/export?** – tells you which tool to pick.
+questions they answer - **what is this file? what does it depend on? what symbols does it
+import/export?** - tells you which tool to pick.
 
 ## The toolkit at a glance
 
@@ -59,7 +59,7 @@ file ./prog
 # interpreter /1ib64/1d-linux-x86-64.50.2, BuildID[sha1]-..., not stripped
 ```
 
-**When:** before anything else – it sets your expectations (a statically-linked binary has
+**When:** before anything else - it sets your expectations (a statically-linked binary has
 no `ldd` deps; a stripped one has no symbol names for `nm`).
 
 # 2, `ldd` - the runtime dependency closure
@@ -86,10 +86,10 @@ ldd ./prog
 **Critical caveats:**
 
 - ***`ldd` runs the loader on the file** (historically could execute code via the loader).
-  **Never run `ldd` on an untrusted binary** – use `objdump -p` / `readelf -d` Instead,
+  **Never run `ldd` on an untrusted binary** - use `objdump -p` / `readelf -d` Instead,
   which only *parse" the file.
 - It shows the **transitive** closure (deps of deps), unlike the direct `DT_NEEDED` list.
-- Shows runtime *resolution* – the actual lib chosen depends on `LD_LIBRARY PATH`,
+- Shows runtime *resolution* - the actual lib chosen depends on `LD_LIBRARY PATH`,
   RPATH/RUNPATH, and the loader cache (`ldconfig`), so `ldd` output can differ between
   machines.
 
@@ -117,10 +117,10 @@ readelf -V prog     # symbol VERSIONING (GLIBC_2.x / GLIBCXX_3.4.x version needs
 
 - **Direct dependencies** (just this binary's `DT_NEEDED`, not transitive):
   `readelf -d | grep NEEDED`.
-- **Symbol-version / "GLIBC_2.XX not found" errors** – `readelf -V` and `--dyn-syms` show
+- **Symbol-version / "GLIBC_2.XX not found" errors** - `readelf -V` and `--dyn-syms` show
   which **versioned** symbols the binary needs (the #1 cause of "built on newer distro,
   won't run on older" failures).
-- Checking **RPATH/RUNPATH** (embedded library search paths – a security and portability
+- Checking **RPATH/RUNPATH** (embedded library search paths - a security and portability
   concern): `readelf -d | grep -E 'RPATH|RUNPATH'`.
 - Confirming **PIE/ASLR** (`Type: DYN` = PIE), stripped-ness, entry point.
 
@@ -144,24 +144,24 @@ objdump -R prog               # dynamic relocations (GOT/PLT entries to resolve)
 
 **When to use:**
 
-- **"which external functions does this import, and at what symbol version?"** –
+- **"which external functions does this import, and at what symbol version?"** -
   `objdump -T` (e.g., `__printf_chk` from `GLIBC_2.3.4`). This is dependency analysis at
   the *symbol* level, finer than `ldd`s library level.
-- **Reverse engineering / understanding codegen** – `objdump -d -C` to read the generated
+- **Reverse engineering / understanding codegen** - `objdump -d -C` to read the generated
   assembly (ties back to the compiler study: watch instruction selection/register
   allocation in action).
-- **Debugging** a crash address – disassemble around the faulting PC.
+- **Debugging** a crash address - disassemble around the faulting PC.
 - `objdump -S` to see your source next to its machine code (compile with `-g`).
 
 ## 5. "nm" - symbol-level dependency debugging
 
 Lists symbols with a type code; the key ones:
 
-- **`T`** – defined in `.text` (a function this file *provides*; upper =
+- **`T`** - defined in `.text` (a function this file *provides*; upper =
   global/exported, lower = local).
-- **`U`** – **undefined** = a symbol this flle *imports* and expects a library to provide.
-- **`D`/`B`'** – defined data (`.data` /`.bss`).
-- **`w`** – weak symbol.
+- **`U`** - **undefined** = a symbol this flle *imports* and expects a library to provide.
+- **`D`/`B`'** - defined data (`.data` /`.bss`).
+- **`w`** - weak symbol.
 
 ```bash
 nm -D -C prog | grep ' U '    # imported (undefined) symbols, demangled -> what it NEEDS
@@ -181,11 +181,11 @@ nm -D -c lib.so | grep ' T '  # exported symbols -> what a library PROVIDES
 
 - **`strings prog`**  printable strings (find embedded messages, versions, paths, secrets
   accidentally baked in).
-- **'size prog** – `text/data/bss` byte summary (quick code/date footprint).
-- **`strace ./prog`** – the syscalls actually made, incl. the `openat` of each `.so` at
+- **'size prog** - `text/data/bss` byte summary (quick code/date footprint).
+- **`strace ./prog`** - the syscalls actually made, incl. the `openat` of each `.so` at
   startup → the *real* runtime library loads (vs. `ldd`s static prediction).
-- **ltrace ./prog'** – library function* calls at runtine.
-- **`ldconfig -p`** – what's in the loader's library cache (where `ldd` resolves from).
+- **ltrace ./prog'** - library function* calls at runtine.
+- **`ldconfig -p`** - what's in the loader's library cache (where `ldd` resolves from).
 
 ______________________________________________________________________
 
@@ -193,7 +193,7 @@ ______________________________________________________________________
 
 **"Why won't this binary run / link?"**
 
-1. `file prog` – is it even the right arch / dynamically 11nked?
+1. `file prog` - is it even the right arch / dynamically 11nked?
 2. `ldd prog` - any ` => not found`? → a missing library. Fix with install /
    `LD_LIBRARY_PATH` / RPATH. *(Untrusted file? use `readelf -d | grep NEEDED` instead.)*
 3. Library present but **"undefined symbol"** at load? → `nm-D -C prog | grep ' U '` to
@@ -207,7 +207,7 @@ ______________________________________________________________________
 
 ## The runtime-vs-static-view distinction (key insight)
 
-- **Static view** (parse the f1le): `readelf`, `objdump`, `n` – safe on untrusted files,
+- **Static view** (parse the f1le): `readelf`, `objdump`, `n` - safe on untrusted files,
   show what the binary "declares.
 - **Runtime view** (involve the loader/execution): `ldd` (runs the loader),
   `strace`/`ltrace` (run the program) - show what *actually* happens, including
@@ -219,7 +219,7 @@ ______________________________________________________________________
 - **These tools are the lens onto the ABI contract.** A binary is a set of *promises*
   (exports, type T) and *requirements* (imports, type U, with symbol versions).
   Linking/loading is matching requirements to promises. Mastering
-  `nm -D`/`objdump -T`/`readelf -V` means you can debug any symbol/ABI mismatch – the
+  `nm -D`/`objdump -T`/`readelf -V` means you can debug any symbol/ABI mismatch - the
   hardest class of deployment failures.
 - **Symbol versioning (GLIBC_2.x/GLIBCXX_3.4.x) is the #1 portability landmine.** "Works
   on my machine,`version not found` on the server" is almost always a versioned-symbol

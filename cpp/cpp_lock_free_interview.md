@@ -1,6 +1,6 @@
 <!-- docs/cpp/cpp_lock_free_interview.md -->
 
-It is an important topic in Ct concurrency, but it should be treated separately from
+It is an important topic in C++ concurrency, but it should be treated separately from
 ordinary mutex-based synchronization.
 
 ## Lock-free concurrency interview questions

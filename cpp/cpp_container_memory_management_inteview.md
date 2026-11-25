@@ -1,6 +1,6 @@
 <!-- cpp/cpp_container_memory_management_interview.md -->
 
-# How C++ standard containers manage their elements – interview Q&A
+# How C++ standard containers manage their elements - interview Q&A
 
 Focus: **where element storage lives (stack, heap, or inline array), how many allocations
 happen, and how the control block relates to the element block.** This complements
@@ -13,21 +13,21 @@ lens is strictly *memory management of the elements*.
 
 Think of every container as **two separate pieces**:
 
-1. **The control block** – the container object itself: a handful of bookkeeping fields
+1. **The control block** - the container object itself: a handful of bookkeeping fields
    (pointers, size, capacity, a root pointer, etc.). It lives **wherever the object is
    declared**: the stack for a local, inside the enclosing object for a member, static
    storage for a global, the heap if the container itself was `new`-ed.
-2. **The element storage** – for most containers a **separate heap allocation** (sometimes
+2. **The element storage** - for most containers a **separate heap allocation** (sometimes
    several), reached through a pointer in the control block.
 
 So for `std::vector<int> v;` declared locally: the three control fields are on the stack;
 the `int` elements are in one heap block.
 
-### 02. What does `sizeof(container)` actually measure?
+### Q2. What does `sizeof(container)` actually measure?
 
 Only the **control block**, never the managed data. `sizeof(std::vector<int>)` is ~24
-bytes on a typical 64-bit library whether the vector holds or or1,000,000 elements. The
-exception is `std::array` whose control block *is* the elements.
+bytes on a typical 64-bit library whether the vector holds 0 or 1,000,000 elements. The
+exception is `std::array`, whose control block *is* the elements.
 
 ### Q3. Which single container stores its elements inline, with no heap allocation?
 
@@ -35,7 +35,7 @@ exception is `std::array` whose control block *is* the elements.
 everything on the stack (or in whatever storage the object occupies). This is also why a
 huge `std::array` local can overflow the stack.
 
-## 2. `std::array` – inline, no allocation
+## 2. `std::array` - inline, no allocation
 
 ### Q4. Where do the elements of `std::array<T, N>` live?
 
@@ -54,7 +54,7 @@ The size is fixed at compile time and cannot grow, and large instances consume w
 storage region the object lives in (frequently the stack). You trade flexibility for the
 absence of heap traffic.
 
-## 3. `std::vector` – one contiguous heap block
+## 3. `std::vector` - one contiguous heap block
 
 ### Q7. How does `std::vector` manage its elements?
 
@@ -74,7 +74,7 @@ reallocation invalidates all iterators, pointers, and references.
 
 ### Q9. Why does moving a vector touch no heap, but copying must allocate?
 
-Move transfers the three control fields and nulls the source – the existing heap block is
+Move transfers the three control fields and nulls the source - the existing heap block is
 reused in place. Copy must allocate a fresh block and copy-construct every element into
 it.
 
@@ -89,10 +89,10 @@ It is typically a **packed bit representation** (one bit per element), so it doe
 store `bool` objects at all. `operator[]` returns a proxy, not a `bool&`. It saves memory
 but breaks the "contiguous array of T" model.
 
-## 4. `std::string` – the inline "mini-heap" (SSO)
+## 4. `std::string` - the inline "mini-heap" (SSO)
 
 > **Terminology note:** "mini-heap" here means an **inline buffer / inline storage inside
-> the string object** – a small private pool of bytes carried by the object. It is *not* a
+> the string object** - a small private pool of bytes carried by the object. It is *not* a
 > "min-heap" (the priority-queue data structure), and it is not the process heap; the
 > whole point of SSO is to **avoid** a heap allocation for short strings.
 
@@ -101,10 +101,10 @@ but breaks the "contiguous array of T" model.
 Two modes:
 
 - **Short string optimization (SSO):** short strings live **inside the string object
-  itself** in a small inline buffer – no heap allocation. This is the "mini-heap inside
+  itself** in a small inline buffer - no heap allocation. This is the "mini-heap inside
   the object" (inline buffer / inline storage inside the string object).
 - **Long strings:** one contiguous **heap** block, like a vector of chars.
- 
+
 ### Q13. Is SSO required by the standard?
 
 No. It is a universal implementation technique but not mandated. The threshold is
@@ -123,14 +123,14 @@ The implementation allocates a heap block, copies the characters out of the inli
 and switches to heap mode. This is a one-way transition for that content (it won't move
 back inline on shrink unless the buffer is reset).
 
-## 5. `std::deque` – two levels of heap allocation
+## 5. `std::deque` - two levels of heap allocation
 
 ### Q16. How does `std::deque` manage its elements?
 
 Segmented storage with **two levels of heap allocation**:
 
-1. A **map** – a heap-allocated array of pointers.
-2. Multiple **fixed-size chunks** – each a separate heap block holding several elements;
+1. A **map** - a heap-allocated array of pointers.
+2. Multiple **fixed-size chunks** - each a separate heap block holding several elements;
    the map points at them.
 
 Elements are therefore never one contiguous block.
@@ -143,10 +143,10 @@ survive push-front/push-back (unlike vector reallocation).
 
 ### Q18. Why is deque random access slower than vector random access?
 
-Indexing requires locating the chunk via the map, then the offset within the chunk – an
+Indexing requires locating the chunk via the map, then the offset within the chunk - an
 extra indirection and worse spatial locality than a single contiguous array.
 
-## 6. `std::list` and `std::forward_list` – one heap node per element
+## 6. `std::list` and `std::forward_list` - one heap node per element
 
 ### Q19. How does `std::list` manage its elements?
 
@@ -165,11 +165,11 @@ complexity is better.
 
 ### Q21. Why can `splice()` move elements between lists without copying values?
 
-It relinks nodes – only the prev/next pointers are adjusted. The rode objects (and the
+It relinks nodes - only the prev/next pointers are adjusted. The rode objects (and the
 values inside them) stay put in memory, so no element copy or move occurs and no
 allocation is needed.
 
-## 7. `std::map` / `std::set` – tree nodes on the heap
+## 7. `std::map` / `std::set` - tree nodes on the heap
 
 ### Q22. How do `std::map` and `std::set` manage their elements?
 
@@ -189,13 +189,13 @@ The key determines the node's position in the ordered tree. Mutating it in place
 violate the tree's ordering invariant, so the stored key is `const`; you must erase and
 re-insert to change a key.
 
-## 8. `std::unordered_map` / `std::unordered_set` – bucket array plus nodes
+## 8. `std::unordered_map` / `std::unordered_set` - bucket array plus nodes
 
 ### Q25.How does an unordered container manage its elements?
 
 **Two heap concerns:**
 
-1. A **bucket array** – a heap-allocated array; each slot heads a chain.
+1. A **bucket array** - a heap-allocated array; each slot heads a chain.
 2. **One heap-allocated node per element**, linked into the bucket's chain.
 
 ### Q26. How many heap allocations populate an unordered map with N elements (ignoring rehash churn)?
@@ -211,15 +211,15 @@ are relinked into the new buckets. Node objects themselves are not reallocated (
 standard node-based design), so references to elements survive a rehash even though
 iterators are invalidated.
 
-## 9. Container adaptors – delegated storage
+## 9. Container adaptors - delegated storage
 
-### Q28. Where do `std::stack`, `std::queue`，and `std::priority_queue` store elements？
+### Q28. Where do `std::stack`, `std::queue`，and `std::priority_queue` store elements?
 
-They don't manage storage directly – they **wrap an underlying container** and inherit its
+They don't manage storage directly - they **wrap an underlying container** and inherit its
 memory model. Defaults: `stack` and `queue` use `std::deque`; `priority_queue` uses
 `std::vector`. So a default `std::stack` has deque's two-level heap model.
 
-## 10. Non-owning views – no element storage at all
+## 10. Non-owning views - no element storage at all
 
 ### Q29. How do `std::string_view` and `std::span` manage elements?
 
@@ -233,7 +233,7 @@ source `std::string` goes out of scope, or the source `std::vector` reallocates 
 `push_back`), the view points at freed or moved memory. The view has no way to know and no
 way to extend the lifetime.
 
-## 11. Changing where elements live – custom allocators and `std::pmr`
+## 11. Changing where elements live - custom allocators and `std::pmr`
 
 ### Q31. Can you keep a `std::vector`'s elements off the global heap?
 
@@ -268,7 +268,7 @@ so it suits short-lived, append-heavy scopes.
 | Container                    | Control block (local → stack) | Element storage                           | # heap allocations for N elements  |
 | ---------------------------- | ----------------------------- | ----------------------------------------- | ---------------------------------- |
 | `std::array<T,N>`            | entire object incl. elements  | inline, none                              | 0                                  |
-| `std::vector<T>`             | 3 fields                      | one contiguous heap block.                | O(log N) reallocations (amortized) |
+| `std::vector<T>`             | 3 fields                      | one contiguous heap block                 | O(log N) reallocations (amortized) |
 | `std::string`                | ~24-32 B incl. SSO buffer     | inline (short) or one heap block (long)   | 0 if short, else O(log N)          |
 | `std::deque<T>`              | map ptr + bookkeeping         | heap map array + heap chunks              | map + ~N/chunk_size chunks         |
 | `std::list` / `forward_list` | head/tail (+ size)            | one heap node per element                 | N                                  |

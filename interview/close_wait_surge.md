@@ -43,7 +43,7 @@ never resolves on its own.
 
 Each CLOSE_WAIT socket holds:
 
-- A **file descriptor»* – bounded by the process `RLIMIT_NOFILE` and system-wide
+- A **file descriptor»* - bounded by the process `RLIMIT_NOFILE` and system-wide
   `fs.file-max`. When you exhaust the fd limit, `accept()` and `open()` start returning
   `EMFILE`/`ENFILE`. The gateway can no longer accept new connections *or open backend
   sockets, log files, or config files*. This is the classic failure cascade: a slow leak

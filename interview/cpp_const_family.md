@@ -195,7 +195,7 @@ using `mutable` to change genuinely observable state.
 **Q: `const std::string& r= std::string("temp");` - is this safe? What about returning
 such a reference?** A: The direct binding is safe: the temporary's lifetime is extended to
 `r`'s scope. But extension applies only to a temporary bound directly to a const reference
-– it does NOT survive a function return or a member initializer.
+- it does NOT survive a function return or a member initializer.
 `const std::string& bad() { return std:string("x"); }` returns a dangling reference, and
 `struct S { const std::string& r; );` initialized from a temporary dangles because member
 init gets no extension. *follow-up:* Why is the member-init case a trap specifically? -

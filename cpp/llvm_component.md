@@ -191,7 +191,7 @@ llc input.ll -o output.s
 
 ## 4. LLVM IR libraries
 
-LLVM provides Ct+ classes for constructing and inspecting IR.
+LLVM provides C++ classes for constructing and inspecting IR.
 
 Important classes include:
 

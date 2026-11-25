@@ -858,7 +858,7 @@ C++23 relaxed this: `static_assert(false)` in a discarded branch is now valid.
 
 **4.2 Where it replaces older techniques**
 
-A recursive tuple walk is the standard example. Compare the pre-Ct+17 version, which
+A recursive tuple walk is the standard example. Compare the pre-C++17 version, which
 needed a terminating overload:
 
 ```cpp
@@ -1321,7 +1321,7 @@ template <typename... Ts> void good(Ts... v) { (process(v), ...); }             
 template <typename... Ts> void old (Ts... v) { int _[] = {0, (process(v), 0)...}; (void)_; }
 ```
 
-The `int _[]` form is what pre-Ct+17 code uses; recognise it, don't write it.
+The `int _[]` form is what pre-C++17 code uses; recognise it, don't write it.
 
 **7.4 Indexing into a pack**
 

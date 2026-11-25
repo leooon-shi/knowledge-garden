@@ -197,7 +197,7 @@ condition.wait(lock, [&] {
 - `memory_order_relaxed`
 - `memory_order_acquire`
 - `memory_order_release`
-- `memory_order_aca_rel`
+- `memory_order_acq_rel`
 - `memory_order_seq_cst`
 - `memory_order_consume`
 
@@ -567,6 +567,7 @@ void task_a() {
     std::lock_guard lock1(first);
     std::lock_guard lock2(second);
 }
+
 void task_b() {
     std::lock_guard lock1(second);
     std::lock_guard lock2(first);
@@ -630,7 +631,7 @@ What happens when the returned thread starts after `value` has gone out of scope
 std::atomic<int> counter{0};
 
 void worker() {
-    counter.fetch_add(1, std:: memory_order_relaxed);
+    counter.fetch_add(1, std::memory_order_relaxed);
 }
 ```
 
@@ -647,8 +648,8 @@ void producer() {
 }
 
 void consumer() {
-    if (!values. empty()) {
-        process(values. front());
+    if (!values.empty()) {
+        process(values.front());
     }
 }
 ```
@@ -736,7 +737,7 @@ Possible tools include:
 
 237. Explain acquire-release synchronization with a producer-consumer example.
 
-238. Explain Why `volatile` is not a replacement for `std::atomic`.
+238. Explain why `volatile` is not a replacement for `std::atomic`.
 
 239. Describe a deadlock and at least three ways to prevent it.
 
