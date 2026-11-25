@@ -2,7 +2,7 @@
 
 # C++ class and object interview answers
 
-Answers to the numbered questions in [`cpp_class_interview.md`](cpp class interview.nd)
+Answers to the numbered questions in [`cpp_class_interview.md`](cpp_class_interview.md)
 (`Q1`-`Q84`). The code-based questions already have answers in that file. Link to an
 answer by its anchor, for example `#q1`.
 
@@ -338,11 +338,12 @@ still participates in overload resolution, so it can intentionally block specifi
 ```cpp
 class Buffer {
     char* data;
+
 public:
     Buffer(std::size_t size)
         : data(new char[size]) {}
 
-    ~Buffer () {
+    ~Buffer() {
         delete[] data;
     }
 };
@@ -372,7 +373,6 @@ copies/moves/destruction are correct automatically.
 ```cpp
 class Buffer {
     std::vector<char> data;      // or std::unique_ptr<char[]>
- 
 public:
     explicit Buffer(std::size_t size) : data(size) {}
 };
@@ -493,7 +493,7 @@ void process() const;
 ```
 
 They are two overloads distinguished by the constness of the implicit `this`. A
-non-`const` object prefers `process())`; a `const` object can only call the `const`
+non-`const` object prefers `process()`; a `const` object can only call the `const`
 overload. This pair is the standard way to provide, for example, both mutating and
 read-only accessors (like `begin()`/`begin() const`).
 
@@ -523,7 +523,7 @@ definition?**
 A function defined inside the class body is implicitly `inline`, which allows its
 definition to appear in multiple translation units via the header. A function merely
 declared in the class and defined out of line (`ret Class::f() {...}`) is not inline by
-default and should normally be defined once in a `.cpp` file. Semantically they benave
+default and should normally be defined once in a `.cpp` file. Semantically they behave
 identically; the difference is linkage/inlining and where the body lives.
 
 ## Inheritance and polymorphism
@@ -552,7 +552,7 @@ and the ability to override virtuals.
 
 **What is runtime polymorphism?**
 
-It is choosing the function to call at run time based on the dynamic type of the object
+It is choosing the function to call at run time based on the dynamic type of the object,
 achieved via virtual functions called through a base pointer or reference. The same call
 expression (`p->draw()`) can invoke different derived overrides depending on what `p`
 actually points to. It trades a small indirection cost for extensibility.
@@ -716,7 +716,7 @@ vtable, and jumps. These are an implementation technique, not mandated by the st
 **Is the existence and exact layout of a vtable guaranteed by the C++ standard?**
 
 No. The standard only specifies the observable behavior of virtual dispatch; it never
-mentions vtables or vptrs. They are the common implementation (Itanium/MSVC ABIS) but the
+mentions vtables or vptrs. They are the common implementation (Itanium/MSVC ABIs) but the
 exact mechanism, layout, and size are implementation-defined. Portable code must not
 depend on vtable layout or on a vptr being at a particular offset.
 
@@ -733,7 +733,7 @@ ambiguity when referring to the base's members and duplicated state. For example
 
 **How does virtual inheritance solve the diamond problem?**
 
-Declaring the intermediate inheritance `virtual` (e.g. 'class B : virtual A) makes all
+Declaring the intermediate inheritance `virtual` (e.g. `class B : virtual A`) makes all
 paths share a single common base subobject, eliminating duplication and ambiguity. The
 most-derived class is then responsible for initializing the virtual base directly. The
 trade-off is extra indirection to locate the shared base and more complex construction

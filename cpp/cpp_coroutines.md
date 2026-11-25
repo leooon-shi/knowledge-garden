@@ -77,7 +77,7 @@ struct Task {
     struct promise_type {
         Task get_return_object() { return Task{std::coroutine_handle<promise_type>::from_promise(*this)}; }
         std::suspend_never initial_suspend() noexcept { return {}; }    // start eagerly
-        std::suspend_always final_suspend() noexcept { return (); }    // stay alive after finishing
+        std::suspend_always final_suspend() noexcept { return {}; }    // stay alive after finishing
         void return_void noexcept {}
         void unhandled_exception() { std::terminate(); }
     };
@@ -296,7 +296,7 @@ I think it is?"
 
 A frame is in exactly one of these states:
 
-| State                                | `done()` | `resume()`               | `destroy ()`                          |
+| State                                | `done()` | `resume()`               | `destroy()`                          |
 | ------------------------------------ | -------- | ------------------------ | ------------------------------------- |
 | Suspended at initial suppend point   | `false`  | starts the body          | OK, destroys parameters + promise     |
 | Suspended at a `co_await`/`co_yield` | `false`  | continues the body       | OK, destroys live locals too          |
@@ -788,9 +788,9 @@ why the distinction is easy to miss - and why it matters when they are not.
 co_await expr
     |
     +-- promise.await_transform(expr) if the promise declares await_transform    --> awaitable
-    |     otherwise                                                                --> awaitable = expr
+    |     otherwise                                                              --> awaitable = expr
     |
-    +-- awaitable.operator co_await() or operator co_await(awaitable) if either exists     --> awaiter
+    +-- awaitable.operator co_await() or operator co_await(awaitable) if either exists   --> awaiter
         otherwise                                                                        --> awaiter = awaitable
 ```
 
@@ -801,7 +801,7 @@ class Task {
 public:
     // Awaiting an rvalue task moves the result out; awaiting an Ivalue yields a reference
     auto operator co_await()  &&     { return Awaiter<Task&&>{std::move(*this)}; }
-    auto operator co_await () const& { return Awaiter<const Task&>{*this}; }
+    auto operator co_await() const& { return Awaiter<const Task&>{*this}; }
 };
 ```
 
@@ -811,7 +811,7 @@ public:
 struct Awaiter {
     // 1. Fast path. Return true to skip suspension entirely.
     //      Called before any state is saved. Must not assume the coroutine is suspended.
-    bool await_ready()) noexcept;
+    bool await_ready() noexcept;
 
     // 2. Called with the coroutine FULLY SUSPENDED. Three possible return types:
     //         void                      -> stay suspended, return to caller
@@ -961,7 +961,7 @@ public:
             return Generator{std::coroutine_handle<promise_type>::from_promise(*this)};
         }
         std::suspend_always initial_suspend() noexcept { return {}; }    // lazy: nothing runs yet
-        std::suspend_always final_suspend()  noexcept { return {}; }    // stay alive so done() is observable
+        std::suspend_always final_suspend()  noexcept { return {}; }     // stay alive so done() is observable
         std::suspend_always yield_value(T& v)  noexcept { current_ = std::addressof(v); return {}; }
         std::suspend_always yield_value(T&& v) noexcept { current_ = std::addressof(v); return {}; }
         void return_void() noexcept {}
@@ -1048,7 +1048,7 @@ struct ResumeOn {
     Executor& ex;
     bool await_ready() const noexcept ( return false; )
     void await_suspend(std::coroutine_handle<> h) const { ex.post(h); }        // resumed on ex's thread
-    void await_resume() const noexcept ()
+    void await_resume() const noexcept {}
 };
 
 // co_await ResumeOn{pool};        // everything after this line runs on the pool
@@ -1377,8 +1377,8 @@ this is its real value, and the counter cannot provide it:
 Direct leak of 40 byte(s) in 1 object(s) allocated from:
     #0 operator new(unsigned long)
     #1 FrameCounter:: operator new(unsigned long)    scenarios.cpp:19
-    #2 raw_never_started ()                            scenarios.cpp:55    <-- the coroutine
-    #3 main                                            scenarios.cpp:74    <-- the call site
+    #2 raw_never_started()                           scenarios.cpp:55    <-- the coroutine
+    #3 main                                          scenarios.cpp:74    <-- the call site
 ```
 
 Two limitations to internalise:
@@ -1465,7 +1465,7 @@ TEST (Coro, NoFrameLeaks) {
     const int before = FrameCounter::live.Load();
     {
         auto t = make_task();
-        t.start ();
+        t.start();
         EXPECT_EQ(t. result(), 42);
     }                                                // destructor must run here
     EXPECT_EQ(FrameCounter:: live.load(), before);    // net zero frames
@@ -1634,7 +1634,7 @@ struct Detached {
     std::coroutine_handle<promise_type> h_;
 };
 
-Detached leaky () {
+Detached leaky() {
     ScopeGuard g{"ran via destroy() "};
     co_await std::suspend_always{};        // parked here
     std::puts("never printed");             // skipped by destroy()
@@ -1795,7 +1795,7 @@ public:
             }
             return *this;
         }
-        T&    operator* () const { return *h_.promise().current_; }
+        T&    operator*() const { return *h_.promise().current_; }
         bool operator==(std::default_sentinel_t) const { return !h_ || return h_.done(); }
     };
 
@@ -1914,7 +1914,6 @@ int main() {
     S81::use();
     S84::use();
 
-
     S44::ResultSlot<int> slot;
     slot.return_value(99);
     std::printf("4.4 slot holds %d\n", slot.take());
@@ -2003,7 +2002,7 @@ struct Raw {
     struct promise_type : FrameCounter {
         Raw get_return_object() { return Raw{std::coroutine handlespromise_type>::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept { return {}; }
-        std::suspend_always final_suspend()      noexcept { return {}; }
+        std::suspend_always final_suspend()   noexcept { return {}; }
         void return_void() noexcept {}
         void unhandled_exception() { std::terminate(); }
     };
@@ -2015,20 +2014,20 @@ struct Owned {
     struct promise_type : Framecounter {
         Owned get_return_object() { return Owned{std::coroutine_handle<promise_type>::from_promise(*this)}; }
         std::suspend_always initial_suspend() noexcept {return {}; }
-        std::suspend_always final_suspend () noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
         void return_void() noexcept {}
         void unhandled exception() { std::terminate(); }
     };
     explicit Owned (std::coroutine_handle<promise_type> h) : h_(h) {}
     Owned (const Owned&) = delete;
     Owned (Owned&& o) noexcept : h_(std::exchange(o.h_, {})) {}
-    ~Owned() { if(h) { h_.destroy(); h_ = {}; } }
+    ~Owned() { if(h_) { h_.destroy(); h_ = {}; } }
     std::coroutine_handle<promise_type> h_;
 };
 
-Raw raw_never_started()        { co_return; }
+Raw raw_never_started()     { co_return; }
 Raw raw_parked()            { co_await std::suspend_always{}; co_return; }
-Owned owned_parked ()        { co_await std::suspend_always{}; co_return; }
+Owned owned_parked()        { co_await std::suspend_always{}; co_return; }
 
 std::coroutine_handle<>> g_array[4];    //.bss root: hides leaks from ASan
 int g_idx = 0;

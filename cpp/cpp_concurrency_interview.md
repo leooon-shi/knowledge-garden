@@ -3,7 +3,7 @@
 ## C++ concurrency interview questions
 
 Answers: [`cpp_concurrency_interview_answers.md`](cpp_concurrency_interview_answers.md)
-(same numbering; `Q42` is at `#q42`, code question 3 at `#c3`.
+(same numbering; `Q42` is at `#q42`, code question 3 at `#c3`).
 
 ### Fundamental concepts
 

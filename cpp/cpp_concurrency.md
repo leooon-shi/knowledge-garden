@@ -9,20 +9,20 @@ primitives, atomics, and lock-free programming. Day 5 (coroutines) has its own d
 > Verified on **g++ 13**, `-std=c++20 -pthread`. Examples that demonstrate data races are
 > labelled as such - build correctness-sensitive code with sanitizers (see the README).
 > Note: on some hardened kernels Threadsanitizer aborts with "unexpected memory mapping";
-> if so, either lower ASLR entropy (`sudo sysctl vm.mmap_rnd_bits=28`) of rely on
+> if so, either lower ASLR entropy (`sudo sysctl vm.mmap_rnd_bits=28`) or rely on
 > Addresssanitizer + careful review.
 
 ## Table of Contents
 
 1. [Threads: `std::thread` and `std::jthread`](#1-threads)
 2. [The C++ memory model](#2-the-c-memory-model)
-3. [synchronization primitives](#3-synchronization-primitives)
+3. [Synchronization primitives](#3-synchronization-primitives)
 4. [Atomics](#4-atomics)
-5. [`memory_order` in practice](#5-memory order-in-practice)
+5. [`memory_order` in practice](#5-memory_order-in-practice)
 6. [Lock-free programming](#6-lock-free-programming)
 7. [Futures, promises, async](#7-futures-promises-async)
 8. [Correctness tooling](#8-correctness-tooling)
-9.  [Practice](#9-practice)
+9. [Practice](#9-practice)
 
 ## 1. Threads
 
@@ -32,15 +32,16 @@ before it is destroyed, or the program calls `std::terminate`.
 ```cpp
 #include <thread>
 #include <iostream>
+
 void work(int id) { std::cout << "thread " << id << '\n'; }
 
 int main() {
-  std::thread t(work, 1);
-  t.join();                 // wait for completion; forgetting this => terminate()
+    std::thread t(work, 1);
+    t.join();                 // wait for completion; forgetting this => terminate()
 }
 ```
 
-### `std::jthread`(C++20) - prefer this
+### `std::jthread` (C++20) - prefer this
 
 `std::jthread` fixes the two footguns of `std::thread`:
 
@@ -55,7 +56,7 @@ std::atomic<long> ticks{0};
 {
     std::jthread w([](std::stop_token st){
         while (!st.stop_requested())          // cooperative: check the token
-          ticks.fetch_add(1, std::memory_order_relaxed);
+            ticks.fetch_add(1, std::memory_order_relaxed);
     });
     // ... do other work ...
 }   // w's destructor calls request_stop() then join() - clean shutdown
@@ -86,7 +87,7 @@ by establishing happens-before, via a mutex or atomics.
 // DATA RACE (undefined behaviour): two threads touch `x`, one writes, no sync.
 int x = 0;
 std::jthread a([&]{ x = 1; });      // write
-std::jthread b([&]{ int y = x; });  // read -- UB
+std::jthread b([&]{ int y = x; });  // read  -- UB
 
 
 ```
@@ -107,18 +108,18 @@ std::mutex m;
 int shared = 0;
 
 void inc() {
-  std::lock_guard lk(m);   // locks now, unlocks at end of scope
-  ++shared;                // critical section
+    std::lock_guard lk(m);   // locks now, unlocks at end of scope
+    ++shared;                // critical section
 }
 ```
 
-| Lock type | Use for |
+| Lock type          | Use for                                              |
 | ------------------ | ---------------------------------------------------- |
 | `std::lock_guard`  | simplest scoped lock, one mutex                      |
 | `std::unique_lock` | movable, deferrable, works with `condition_variable` |
-| `sta::scoped_lock` | lock **multiple** mutexes deadlock-free (C++17)      |
+| `std::scoped_lock` | lock **multiple** mutexes deadlock-free (C++17)      |
 | `std::shared_lock` | shared (reader) lock on a `std::shared_mutex`        |
- 
+
 `std::shared_mutex` is a reader-writer lock: many `shared_lock` readers OR one
 `unique_lock` writer.
 
@@ -129,7 +130,7 @@ std::shared_mutex sm;
 // writer:   std::unique_lock wl(sm);   // exclusive
 ```
 
-### `condition_variable` – wait for a condition
+### `condition_variable` - wait for a condition
 
 Always use the predicate overload of `wait`; it re-checks the condition and correctly
 handles **spurious wakeups** (a `wait` may return without a notify).
@@ -187,7 +188,7 @@ lightweight signaling.
 
 ## 4.Atomics
 
-`std::atomic<T>` provides indivisible operations with defined cross-thread ordering – the
+`std::atomic<T>` provides indivisible operations with defined cross-thread ordering - the
 race-free alternative to a mutex for simple shared state.
 
 ```cpp
@@ -200,7 +201,7 @@ counter.store(10);                 // atomic write
 int old = counter.exchange (5);    // set to 5, return previous
 ```
 
-### compare-exchange – the workhorse of lock-free code
+### compare-exchange - the workhorse of lock-free code
 
 `compare_exchange_weak(expected, desired)` : atomically, *if* the value equals `expected`,
 set it to `desired` and return true; otherwise load the current value into `expected` and
@@ -327,7 +328,7 @@ A lock-free stack pushes/pops via CAS on the head pointer:
 ```
 
 Multi-consumer pop hits the **ABA problem**: thread 1 reads head = A, stalls; thread 2
-pops A, pops B, pushes A back; thread 1's CAS sees "still A" and succeeds – but the stack
+pops A, pops B, pushes A back; thread 1's CAS sees "still A" and succeeds - but the stack
 changed underneath it. Mitigations: tagged pointers (a version counter packed with the
 pointer), hazard pointers, or epoch-based reclamation. This is exactly why "just use a
 mutex" is usually the right call.
@@ -353,7 +354,7 @@ int result = f.get();   // blocks until ready; 49
   building a thread pool's task queue.
 
 Limitations of `std::async` worth knowing: no continuations (`.then`), and the future
-returned by `std::async` **blocks in its destructor** until the task finishes – a subtle
+returned by `std::async` **blocks in its destructor** until the task finishes - a subtle
 source of accidental serialization. For real workloads, build a thread pool with
 `packaged_task` (or use the coroutine scheduler from
 `exercises/exercise_coro_7_scheduler.cpp`).
@@ -363,10 +364,10 @@ source of accidental serialization. For real workloads, build a thread pool with
 Concurrency bugs are non-deterministic; tooling is not optional.
 
 ```bash
-# ThreadSanitizer – detects data races at runtime. Run your tests under it.
+# ThreadSanitizer - detects data races at runtime. Run your tests under it.
 g++ -std=c++20 -fsanitize=thread -g -pthread -o t file.cpp && ./t
 
-# AddressSanitizer + UBSan – use-after-free, OOB, UB.
+# AddressSanitizer + UBSan - use-after-free, OOB, UB.
 g++ -std=c++20 -fsanitize=address,undefined -g -o t file.cpp && ./t
 ```
 
@@ -374,24 +375,24 @@ g++ -std=c++20 -fsanitize=address,undefined -g -o t file.cpp && ./t
   are probabilistic) - run under load, many iterations.
 - Never combine TSan with ASan in one binary.
 - Stress-test lock-free code: many threads, many iterations, compare against a mutex-based
-  reference (the technique used to validate the tree structures in `../` – cross-check
+  reference (the technique used to validate the tree structures in `../` - cross-check
   against a known-correct implementation).
 
 ## 9. Practice
 
 Ordered to match the plan's Week 3.
 
-1. **Producer/consumer queue** (Day 1) – a mutex + `condition_variable` bounded queue. Run
+1. **Producer/consumer queue** (Day 1) - a mutex + `condition_variable` bounded queue. Run
    it under TSan.
-2. **Thread pool** (Day 2) – `std::jthread` workers pulling from a task queue guarded by 
+2. **Thread pool** (Day 2) - `std::jthread` workers pulling from a task queue guarded by 
    `condition_variable`; then rewrite dispatch using a "counting semaphore. Compare with
    the coroutine scheduler in `exercises/`.
-3. **Relaxed vs seq_st counter** (Day 1/3) – increment an atomic from threads with
+3. **Relaxed vs seq_st counter** (Day 1/3) - increment an atomic from threads with
    `relaxed`, verify the total is still exact; reason about why ordering doesn't matter
    here.
-4. **SPSC ring buffer** (Day 3) – implement the buffer above from scratch; benchmark it
+4. **SPSC ring buffer** (Day 3) - implement the buffer above from scratch; benchmark it
    against a `std::mutex` + `std::queue` version; run under TSan.
-5. **Break it on purpose** – remove the `release`/`acquire` pairing from the ring buffer
+5. **Break it on purpose** - remove the `release`/`acquire` pairing from the ring buffer
    (make everything `relaxed`) and see whether TSan or a stress test catches the resulting
    race.
 

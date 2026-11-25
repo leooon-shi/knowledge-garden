@@ -4,15 +4,15 @@
 ## C++ class and object interview questions
 
 Answers: [`cpp_class_interview_answers.md`](cpp_class_interview_answers.md) (same
-numbering; `Q42` is at `#q42`. The code-based questinos keep their answers inline.)
+numbering; `Q42` is at `#q42`. The code-based questions keep their answers inline.)
 
 ### Basic concepts
 
 1. What is the difference between a class and an object?
 
-2. What is the difference between "class" and `struct` in C++?
+2. What is the difference between `class` and `struct` in C++?
 
-3. What are the default access specifiers for class" and `struct`?
+3. What are the default access specifiers for `class` and `struct`?
 
 4. What is the difference between a data member and a member function?
 
@@ -22,11 +22,11 @@ numbering; `Q42` is at `#q42`. The code-based questinos keep their answers inlin
 6. Can an object be created without explicitly defining a constructor?
 
 7. What is the difference between a declaration and a definition of a class member
-   function?
+    function?
 
-8. What is the purpose of the this pointer?
+8. What is the purpose of the `this` pointer?
 
-9.  Can 'this" be null inside a non-static member function?
+9. Can `this` be null inside a non-static member function?
 
 10. What is the difference between static and non-static data members?
 
@@ -62,7 +62,7 @@ public:
 
 16. Why should members generally be initialized using a member-initializer list?
 
-17. What happens if a const' data member is not included in the constructor's initializer
+17. What happens if a `const` data member is not included in the constructor's initializer
     list?
 
 18. What happens if a reference data member is not initialized?
@@ -285,7 +285,7 @@ public:
 
 int main() {
     Example e;
-    e->print();
+    e.print();
 }
 ```
 
@@ -314,13 +314,14 @@ class Derived : public Base {
     int* data;
 
 public:
-    Derived ()
+    Derived()
         : data(new int[10]) {}
 
     ~Derived() {
         delete[] data;
     }
 };
+
 int main() {
     Base* object = new Derived;
     delete object;
@@ -445,8 +446,8 @@ What is printed?
 
 class Base {
 public:
-    virtual void print() {
-        const std::cout <<< "Base\n";
+    virtual void print() const {
+        const std::cout << "Base\n";
     }
 };
 
@@ -491,10 +492,10 @@ What can happen when a class contains a `std::unique_ptr`?
 
 ```cpp
 class Owner {
-    std::unique _ptr<int> value;
+    std::unique_ptr<int> value;
 
 public:
-    Owner ()
+    Owner()
         : value(std::make_unique<int>(42)) {}
 };
 ```
@@ -520,7 +521,7 @@ struct WithVirtualFunction {
     virtual void f();
 };
 
-struct Derived: Empty {
+struct Derived : Empty {
     int value;
 };
 
@@ -530,12 +531,13 @@ struct Holder {
 };
 
 int main() {
-    std::cout << sizeof(Empty) << "\n";
-    std::cout << sizeof(WithVirtualFunction) << "\n";
-    std::cout << sizeof(Derived) << "\n";
-    std::cout << sizeof(Holder) << "\n";
+    std::cout << sizeof(Empty) << '\n';
+    std::cout << sizeof(WithVirtualFunction) << '\n';
+    std::cout << sizeof(Derived) << '\n';
+    std::cout << sizeof(Holder) << '\n';
 }
 ```
+
 <details>
 <summary>Expected discussion</summary>
 
@@ -550,13 +552,13 @@ object an address and makes arrays of the type work.
 static_assert(sizeof(Empty) >= 1);
 ```
 **A class with no data members can still need storage.** `WithvirtualFunction` declares no
-data, but each object holds a table pointer, commonly 8 bytes on 64-bit systems.
+data, but each object holds a vtable pointer, commonly 8 bytes on 64-bit systems.
 Alignment and other members can also make a class larger.
 
 **Empty base optimization (EBO).** `Empty` on its own has size 1, but as a base class it
 may occupy no extra space, so `sizeof(Derived) == sizeof(int)` is commonly true.
 
-**`[Ino_unique_address]]` (C++20).** An empty *member* normally costs at least one byte
+**`[[no_unique_address]]` (C++20).** An empty *member* normally costs at least one byte
 plus padding. The attribute lets the compiler place `tag` in padding or at the same
 address as another member when allowed, so `Holder` can be the size of an `int`.
 
@@ -567,7 +569,7 @@ Summary:
 - `[[no_unique_address]]` empty member: may add zero bytes.
 - Virtual functions, alignment, or other members can make the class larger.
 
-*FolLow-up:* why do standard containers and `std::unique_ptr` care about this? Their
+*Follow-up:* Why do standard containers and `std::unique_ptr` care about this? Their
 allocator and deleter are usually empty types; EBO or `[[no_unique_address]]` keeps them
 from adding size to every container or smart pointer.
 
@@ -580,12 +582,12 @@ For each practice session:
 - Answer 5 conceptual questions without looking up the answers.
 - Solve 2 code-tracing questions.
 - Implement 1 small class.
-- Compile with warnings enabled;
+- Compile with warnings enabled:
 
 ```bash
 g++ -std=c++20 -Wall -Wextra -Wpedantic -Wconversion \
     -fsanitize=address,undefined \
-    source. cpp
+    source.cpp
 ```
 
 - Explain:
@@ -600,4 +602,3 @@ g++ -std=c++20 -Wall -Wextra -Wpedantic -Wconversion \
 A strong interview candidate should be able to explain not only whether code works, but
 also object lifetime, ownership, exception safety, copying behavior, and the reason behind
 the design.
-
