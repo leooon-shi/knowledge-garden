@@ -142,7 +142,7 @@ handles **spurious wakeups** (a `wait` may return without a notify).
 
 std::mutex m;
 std::condition_variable cv;
-std::queue <int> q;
+std::queue<int> q;
 
 void producer(int v) {
     { std::lock_guard lk(m); q.push(v); }
@@ -165,28 +165,28 @@ int consumer() {
 
 // counting_semaphore: a permit counter. Great for bounding concurrency.
 std::counting_semaphore<8> slots{4};   // at most 4 holders at once
-slots.acquire(); /* ...use resource...*/ slots.release();
+slots.acquire();  /* ...use resource...*/ slots.release();
 
-// binary_semaphore == counting semaphore<1>; a simple signal.
+// binary_semaphore == counting_semaphore<1>; a simple signal.
 std::binary_semaphore signal{0};
 // thread A: signal.acquire();   // blocks until B signals
 // thread B: signal.release();
 
-// latch: one-shot countdown. Threads count_down); waiters block until it hits 0.
+// latch: one-shot countdown. Threads count_down()); waiters block until it hits 0.
 std::latch done{3};
 // each worker: done.count_down();
 // coordinator: done.wait();
 
 // barrier: reusable rendezvous for a fixed set of threads (phases).
 std::barrier sync{2};
-// each of 2 threads: sync.arrive_and wait();  // all must arrive before any proceed
+// each of 2 threads: sync.arrive_and_wait();  // all must arrive before any proceed
 ```
 
 Rule of thumb: **latch** for "wait until N things happen once"; **barrier** for
 "repeatedly sync a fixed group between phases"; **semaphore** for "at most N at a time" or
 lightweight signaling.
 
-## 4.Atomics
+## 4. Atomics
 
 `std::atomic<T>` provides indivisible operations with defined cross-thread ordering - the
 race-free alternative to a mutex for simple shared state.
@@ -198,26 +198,26 @@ std::atomic<int> counter{0};
 counter.fetch_add(1);              // atomic ++, returns previous value
 int v = counter.load();            // atomic read
 counter.store(10);                 // atomic write
-int old = counter.exchange (5);    // set to 5, return previous
+int old = counter.exchange(5);     // set to 5, return previous
 ```
 
 ### compare-exchange - the workhorse of lock-free code
 
-`compare_exchange_weak(expected, desired)` : atomically, *if* the value equals `expected`,
+`compare_exchange_weak(expected, desired)`: atomically, *if* the value equals `expected`,
 set it to `desired` and return true; otherwise load the current value into `expected` and
 return false. The canonical retry loop:
 
 ```cpp
-std::atomic<int> valuef{0};
+std::atomic<int> value{0};
 
 // Atomically double the value, retrying if another thread interfered.
 int cur = value.load();
 while (!value.compare_exchange_weak(cur, cur * 2)) {
-  // cur was refreshed with the latest value; loop and try again
+    // cur was refreshed with the latest value; loop and try again
 }
 ```
 
-`_weak` may fail spuriously (cheaper on some ISAS) so it belongs in a loop; `_strong`
+`_weak` may fail spuriously (cheaper on some ISAs) so it belongs in a loop; `_strong`
 fails only on a real mismatch - use it when there's no loop.
 
 ### `std::atomic_ref` (C++20)
@@ -258,7 +258,7 @@ ready.store(true, std::memory_order_release);  // (2) publishes (1)
 
 // consumer
 while (!ready.load(std::memory_order_acquire)) {}  // (3) waits for (2)
-assert (payload == 42);                            // guaranteed: (1) happens-before here
+assert(payload == 42);                            // guaranteed: (1) happens-before here
 ```
 
 `relaxed` is safe for a pure counter because you only care that increments aren't lost,
@@ -291,26 +291,26 @@ CAS loop required.
 
 template <typename T, std::size_t Cap>          // Cap must be a power of two
 class SpscRing {
-  static_assert((Cap & (Cap - 1)) == 0, "Cap must be a power of two");
-  std::array<T, Cap> buf_{};
-  std::atomic<std::size_t> head_(0);           // consumer advances this
-  std::atomic<std::size_t> tail_(0);           // producer advances this
+    static_assert((Cap & (Cap - 1)) == 0, "Cap must be a power of two");
+    std::array<T, Cap> buf_{};
+    std::atomic<std::size_t> head_(0);           // consumer advances this
+    std::atomic<std::size_t> tail_(0);           // producer advances this
 public:
-  bool push(const T& v) {                      // producer only
-      auto t = tail.load(std::memory_order_relaxed);
-      auto next = (t + 1) & (Cap - 1);
-      if (next == head_.load(std::memory_order_acquire)) return false;  // full
-      buf_[t] = v;
-      tail_.store(next, std::memory_order_release);   // publish the write
-      return true;
-  }
-  std::optional<T> pop() {                     // consumer only
-      auto h = head_.load(std::memory_order_relaxed);
-      if (h == tail_.load(std::memory_order_acquire)) return std::nullopt; // empty
-      T v = buf_[h];
-      head_.store((h + 1) & (Cap - 1), std::memory_order _release);
-      return v;
-  }
+    bool push(const T& v) {                      // producer only
+        auto t = tail.load(std::memory_order_relaxed);
+        auto next = (t + 1) & (Cap - 1);
+        if (next == head_.load(std::memory_order_acquire)) return false;  // full
+        buf_[t] = v;
+        tail_.store(next, std::memory_order_release);   // publish the write
+        return true;
+    }
+    std::optional<T> pop() {                     // consumer only
+        auto h = head_.load(std::memory_order_relaxed);
+        if (h == tail_.load(std::memory_order_acquire)) return std::nullopt; // empty
+        T v = buf_[h];
+        head_.store((h + 1) & (Cap - 1), std::memory_order _release);
+        return v;
+    }
 };
 ```
 

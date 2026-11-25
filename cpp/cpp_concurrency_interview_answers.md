@@ -2629,7 +2629,7 @@ void producer() {
     ready.store(true, std::memory_order_release);
 }
 
-void consumer () {
+void consumer() {
     while (!ready.load(std::memory_order_acquire)) {
 
     }

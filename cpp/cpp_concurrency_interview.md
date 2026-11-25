@@ -83,7 +83,7 @@ void start() {
 
 31. How should thread arguments be passed safely?
 
-32. What is the purpose of `std::thread::hardware_concurrency()`)?
+32. What is the purpose of `std::thread::hardware_concurrency()`?
 
 33. Why should its return value not always be treated as the exact number of usable CPU
     cores?
@@ -170,7 +170,7 @@ condition.wait(lock, [&] {
 
 69. What happens if the producer adds data before the consumer starts waiting?
 
-70. How should shutdown be implemented for a condition-variable-based worker queue
+70. How should shutdown be implemented for a condition-variable-based worker queue?
 
 ## Atomics and the C++ memory model
 
@@ -194,12 +194,12 @@ condition.wait(lock, [&] {
 
 80. What are the C++ memory-order options?
 
- - `memory_order_relaxed`
- - `memory_order_acquire`
- - `memory_order_release`
- - `memory_order_aca_rel`
- - `memory_order_seq_cst`
- - `memory_order_consume`
+- `memory_order_relaxed`
+- `memory_order_acquire`
+- `memory_order_release`
+- `memory_order_aca_rel`
+- `memory_order_seq_cst`
+- `memory_order_consume`
 
 81. When is `memory_order_relaxed` appropriate?
 
@@ -377,7 +377,7 @@ struct alignas(64) Counter {
 
 153. How do you prevent a task from waiting forever?
 
-154. What is nested parallelism, and Why can it exhaust a thread pool?
+154. What is nested parallelism, and why can it exhaust a thread pool?
 
 ## Thread-safe containers and queues
 
@@ -433,7 +433,7 @@ struct alignas(64) Counter {
 
 179. What is memory reclamation?
 
-180. Why is deleting a node immediately unsafe in a lock-free data strudture?
+180. Why is deleting a node immediately unsafe in a lock-free data structure?
 
 181. What is hazard-pointer reclamation?
 
@@ -447,7 +447,7 @@ struct alignas(64) Counter {
 
 186. How can tagged pointers help with lock-free structures?
 
-187. What is pointer alignment, and Why can it matter for tagged pointers?
+187. What is pointer alignment, and why can it matter for tagged pointers?
 
 188. Why can memory reclamation dominate lock-free data-structure performance?
 
@@ -592,7 +592,7 @@ std::mutex mutex;
 std::condition_variable cv;
 bool ready = false;
 
-void consumer () {
+void consumer() {
     std::unique_lock lock(mutex);
     cv.wait(lock);
 
